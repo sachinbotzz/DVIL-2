@@ -3,20 +3,21 @@ import os
 import logging
 import random
 import string
-from info import ULTRA_FAST_MODE, MAX_LIST_ELM, BAD_WORDS, LONG_IMDB_DESCRIPTION, IS_VERIFY, MAX_B_TN, TUTORIAL, TUTORIAL_2, TUTORIAL_3, LOG_CHANNEL, TMDB_ON_SEARCH
+from info import *
 from imdbkit import IMDBKit 
 import asyncio
-from pyrogram.types import Message, InlineKeyboardButton
-from pyrogram.errors import InputUserDeactivated, UserNotParticipant, FloodWait, UserIsBlocked, PeerIdInvalid, ChatAdminRequired
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.errors import InputUserDeactivated, UserNotParticipant, FloodWait, UserIsBlocked, PeerIdInvalid, ChatAdminRequired, MessageNotModified
 from pyrogram import enums
 from typing import Union
 from Script import script
 from typing import List
 from database.users_chats_db import db
 from bs4 import BeautifulSoup
-import aiohttp
+import requests
 from shortzy import Shortzy
 
+from urllib.parse import quote
 from plugins.Dreamxfutures.Imdbposter import get_movie_detailsx
 
 logger = logging.getLogger(__name__)
@@ -134,7 +135,7 @@ async def is_check_admin(bot, chat_id, user_id):
     try:
         member = await bot.get_chat_member(chat_id, user_id)
         return member.status in [enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER]
-    except Exception:
+    except:
         return False
     
 async def users_broadcast(user_id, message, is_pin):
@@ -158,7 +159,7 @@ async def users_broadcast(user_id, message, is_pin):
         await db.delete_user(int(user_id))
         logging.info(f"{user_id} - PeerIdInvalid")
         return False, "Error"
-    except Exception:
+    except Exception as e:
         return False, "Error"
 
 async def groups_broadcast(chat_id, message, is_pin):
@@ -167,13 +168,13 @@ async def groups_broadcast(chat_id, message, is_pin):
         if is_pin:
             try:
                 await m.pin()
-            except Exception:
+            except:
                 pass
         return "Success"
     except FloodWait as e:
         await asyncio.sleep(e.x)
         return await groups_broadcast(chat_id, message)
-    except Exception:
+    except Exception as e:
         await db.delete_chat(chat_id)
         return "Error"
 
@@ -210,7 +211,7 @@ async def clear_junk(user_id, message):
         await db.delete_user(int(user_id))
         logging.info(f"{user_id} - PeerIdInvalid")
         return False, "Error"
-    except Exception:
+    except Exception as e:
         return False, "Error"
      
 async def get_status(bot_id):
@@ -500,18 +501,14 @@ async def search_gagala(text):
     usr_agent = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
         'Chrome/61.0.3163.100 Safari/537.36'
-    }
-    text = text.replace(" ", "+")
-    url = f"https://www.google.com/search?q={text}"
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=usr_agent, timeout=30) as response:
-            response.raise_for_status()
-            html = await response.text()
-
-    soup = await asyncio.to_thread(BeautifulSoup, html, 'html.parser')
-    titles = soup.find_all('h3')
-    return [title.get_text() for title in titles if title.get_text().strip()]
+        }
+    text = text.replace(" ", '+')
+    url = f'https://www.google.com/search?q={text}'
+    response = requests.get(url, headers=usr_agent)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'html.parser')
+    titles = soup.find_all( 'h3' )
+    return [title.getText() for title in titles]
 
 async def get_shortlink(link, grp_id, is_second_shortener=False, is_third_shortener=False):
     settings = await get_settings(grp_id)
@@ -525,24 +522,21 @@ async def get_shortlink(link, grp_id, is_second_shortener=False, is_third_shorte
     shortzy = Shortzy(api, site)
     try:
         link = await shortzy.convert(link)
-    except Exception:
+    except Exception as e:
         link = await shortzy.get_quick_link(link)
     return link
 
 async def get_settings(group_id):
-    group_id = int(group_id)
     settings = temp.SETTINGS.get(group_id)
     if not settings:
         settings = await db.get_settings(group_id)
-        temp.SETTINGS[group_id] = settings.copy()
+        temp.SETTINGS.update({group_id: settings})
     return settings
     
 async def save_group_settings(group_id, key, value):
-    group_id = int(group_id)
     current = await get_settings(group_id)
-    current = current.copy()
     current.update({key: value})
-    temp.SETTINGS[group_id] = current
+    temp.SETTINGS.update({group_id: current})
     await db.update_settings(group_id, current)
 
 def clean_filename(file_name):
@@ -564,9 +558,9 @@ def get_size(size):
         size /= 1024.0
     return "%.2f %s" % (size, units[i])
 
-def split_list(lst, n):
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]  
+def split_list(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]  
 
 def extract_request_content(message_text):
     match = re.search(r"<u>(.*?)</u>", message_text)
@@ -788,7 +782,7 @@ def gfilterparser(text, keyword):
 
     try:
         return note_data, buttons, alerts
-    except Exception:
+    except:
         return note_data, buttons, None
 
 def parser(text, keyword):
@@ -840,7 +834,7 @@ def parser(text, keyword):
 
     try:
         return note_data, buttons, alerts
-    except Exception:
+    except:
         return note_data, buttons, None
 
 def remove_escapes(text: str) -> str:
@@ -863,7 +857,7 @@ async def log_error(client, error_message):
             text=f"<b>⚠️ Error Log:</b>\n<code>{error_message}</code>"
         )
     except Exception as e:
-        logger.error("Failed to log error: %s", e)
+        print(f"Failed to log error: {e}")
 
 
 def get_time(seconds):
@@ -1066,7 +1060,7 @@ async def get_cap(settings, remaining_seconds, files, query, total_results, sear
                 )
 
             cap += "\n\n<u>Your Requested Files Are Here</u>\n\n</b>"
-            for idx, file in enumerate(files, start=offset + 1):
+            for idx, file in enumerate(files, start=offset):
                         cap += (
                             f"<b>{idx}. "
                             f"<a href='https://telegram.me/{temp.U_NAME}"
@@ -1079,3 +1073,119 @@ async def get_cap(settings, remaining_seconds, files, query, total_results, sear
     except Exception as e:
         logging.error(f"Error in get_cap: {e}")
         pass
+
+
+def is_premium_movie(file_name_or_title: str) -> bool:
+    if not file_name_or_title or not PREMIUM_MOVIES:
+        return False
+    
+    clean_name = file_name_or_title.lower().replace('.', ' ').replace('_', ' ').replace('-', ' ')
+    clean_name = re.sub(r'\bs0*(\d+)(?=[e\s\._\-]|\b)', r'season \1', clean_name)
+    
+    for pm in PREMIUM_MOVIES:
+        if not pm or not isinstance(pm, str):
+            continue
+        clean_pm = pm.lower().strip().replace('.', ' ').replace('_', ' ').replace('-', ' ')
+        clean_pm = re.sub(r'\bs0*(\d+)(?=[e\s\._\-]|\b)', r'season \1', clean_pm)
+        
+        if clean_pm in clean_name:
+            return True
+            
+        pm_words = [w for w in clean_pm.split() if w]
+        if pm_words and all(re.search(r'\b' + re.escape(w) + r'\b', clean_name) for w in pm_words):
+            return True
+            
+    return False
+
+
+def get_premium_plans_content():
+    caption = (
+        "🏆 <b>AVAILABLE PLANS</b> 🏆\n\n"
+        "💎 <b>PREMIUM MEMBERSHIP</b> 💎\n\n"
+        f"⭕ 07 Days ➜ ₹{PLAN_7_DAYS_PRICE}\n"
+        f"⭕ 15 Days ➜ ₹{PLAN_15_DAYS_PRICE}\n"
+        f"⭕ 30 Days ➜ ₹{PLAN_30_DAYS_PRICE}\n"
+        f"⭕ 45 Days ➜ ₹{PLAN_45_DAYS_PRICE}\n"
+        f"⭕ 60 Days ➜ ₹{PLAN_60_DAYS_PRICE}\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "📌 <b>Subscription Process</b>\n\n"
+        "✅ Send payment screenshot after payment.\n\n"
+        "✅ Wait for admin approval.\n\n"
+        "━━━━━━━━━━━━━━━━━━━━"
+    )
+    buttons = [
+        [
+            InlineKeyboardButton(f"07 Days ₹{PLAN_7_DAYS_PRICE}", callback_data="plan_7"),
+            InlineKeyboardButton(f"15 Days ₹{PLAN_15_DAYS_PRICE}", callback_data="plan_15")
+        ],
+        [
+            InlineKeyboardButton(f"30 Days ₹{PLAN_30_DAYS_PRICE}", callback_data="plan_30"),
+            InlineKeyboardButton(f"45 Days ₹{PLAN_45_DAYS_PRICE}", callback_data="plan_45")
+        ],
+        [
+            InlineKeyboardButton(f"60 Days ₹{PLAN_60_DAYS_PRICE}", callback_data="plan_60")
+        ],
+        [
+            InlineKeyboardButton("⬅ Back", callback_data="premium_info")
+        ]
+    ]
+    return caption, InlineKeyboardMarkup(buttons)
+
+
+def generate_upi_link(days: Union[int, str], amount: Union[int, str]) -> str:
+    days_str = str(days).zfill(2)
+    note = quote(f"Premium Subscription ({days_str} Days)", safe='()')
+    name = quote(str(UPI_NAME))
+    return f"upi://pay?pa={UPI_ID}&pn={name}&am={amount}&cu=INR&tn={note}"
+
+
+def get_plan_details_content(plan_key: str):
+    plans_map = {
+        "plan_7": ("07", PLAN_7_DAYS_PRICE),
+        "plan_07": ("07", PLAN_7_DAYS_PRICE),
+        "plan_15": ("15", PLAN_15_DAYS_PRICE),
+        "plan_30": ("30", PLAN_30_DAYS_PRICE),
+        "plan_45": ("45", PLAN_45_DAYS_PRICE),
+        "plan_60": ("60", PLAN_60_DAYS_PRICE),
+    }
+    if plan_key not in plans_map:
+        return None, None
+
+    days, price = plans_map[plan_key]
+    caption = (
+        f"💎 <b>SELECTED PLAN : {days} DAYS</b>\n\n"
+        f"💰 <b>AMOUNT : ₹{price}</b>\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "📱 <b>PAYMENT METHOD</b>\n\n"
+        "Scan the QR Code above.\n\n"
+        "OR\n\n"
+        "💳 <b>UPI ID</b>\n\n"
+        f"<code>{UPI_ID}</code>\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "⚠️ <b>IMPORTANT</b>\n\n"
+        f"• Pay exactly ₹{price}.\n\n"
+        "• Send payment screenshot after payment.\n\n"
+        "• Premium will be activated after payment verification.\n\n"
+        "━━━━━━━━━━━━━━━━━━━━"
+    )
+    buttons = [
+        [InlineKeyboardButton("✅ I HAVE PAID", callback_data="paid_info")],
+        [InlineKeyboardButton("⬅ BACK", callback_data="buy_info")]
+    ]
+    return caption, InlineKeyboardMarkup(buttons)
+
+
+def get_paid_confirmation_content():
+    support_url = SUPPORT_USERNAME if SUPPORT_USERNAME.startswith(('http://', 'https://')) else f"https://t.me/{SUPPORT_USERNAME.lstrip('@')}"
+    caption = (
+        "✅ <b>PAYMENT SCREENSHOT REQUIRED</b>\n\n"
+        "Please send your payment screenshot in this chat.\n\n"
+        "After verification your Premium Membership will be activated.\n\n"
+        "⏳ <b>Please wait patiently.</b>"
+    )
+    buttons = [
+        [InlineKeyboardButton("📤 SEND PAYMENT SCREENSHOT", url=support_url)],
+        [InlineKeyboardButton("⬅ BACK", callback_data="buy_info")]
+    ]
+    return caption, InlineKeyboardMarkup(buttons)
+
