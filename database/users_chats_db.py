@@ -1,18 +1,8 @@
-import datetime
-import logging
-import pytz  
 import motor.motor_asyncio
-from info import (
-    DATABASE_NAME,DATABASE_URI,DATABASE_URI2, MULTIPLE_DB, MAINTENANCE, PM_SEARCH,
-    BUTTON_MODE, P_TTI_SHOW_OFF, PROTECT_CONTENT, IMDB, SPELL_CHECK_REPLY, MELCOW_NEW_USERS, 
-    AUTO_DELETE, AUTO_FFILTER, MAX_BTN, IMDB_TEMPLATE, LOG_VR_CHANNEL, TUTORIAL, TUTORIAL_2,
-    TUTORIAL_3, SHORTENER_API, SHORTENER_API2, SHORTENER_API3, SHORTENER_WEBSITE, SHORTENER_WEBSITE2,
-    SHORTENER_WEBSITE3, IS_VERIFY, TWO_VERIFY_GAP, THREE_VERIFY_GAP, CUSTOM_FILE_CAPTION, AUTH_CHANNELS,
-    MOVIE_UPDATE_NOTIFICATION
-)
-
-
-logger = logging.getLogger(__name__)
+from info import *
+import datetime
+import pytz  
+from pymongo.errors import DuplicateKeyError
 
 class Database:    
     def __init__(self, uri, database_name):
@@ -21,7 +11,7 @@ class Database:
         # Collections
         self.col = self.db.users
         self.grp = self.db.groups
-        self.users = self.db.uersz #Premium users
+        self.users = self.db.uersz
         self.req = self.db.requests
         self.botcol = self.db.bot_settings
         self.misc = self.db.misc
@@ -39,7 +29,7 @@ class Database:
 
     async def delete_all_msg(self):
         await self.movie_updates.delete_many({})
-        logger.info("All filenames notification have been deleted.")
+        print("All filenames notification have been deleted.")
         return True
  
      
@@ -148,7 +138,7 @@ class Database:
         await self.grp.update_one({'id': int(id)}, {'$set': {'chat_status': chat_status}})
         
     async def update_settings(self, id, settings):
-        await self.grp.update_one({'id': int(id)}, {'$set': {'settings': settings}}, upsert=True)
+        await self.grp.update_one({'id': int(id)}, {'$set': {'settings': settings}})
                                   
     async def get_settings(self, id):
         default = {
@@ -178,21 +168,9 @@ class Database:
             'caption': CUSTOM_FILE_CAPTION,
             'fsub': AUTH_CHANNELS,
         }
-        chat = await self.grp.find_one({'id': int(id)})
+        chat = await self.grp.find_one({'id':int(id)})
         if chat and 'settings' in chat:
-            saved = chat['settings']
-            res = default.copy()
-            res.update(saved)
-            if not saved.get('custom_shortner'):
-                res['shortner'] = SHORTENER_WEBSITE
-                res['api'] = SHORTENER_API
-            if not saved.get('custom_shortner_two'):
-                res['shortner_two'] = SHORTENER_WEBSITE2
-                res['api_two'] = SHORTENER_API2
-            if not saved.get('custom_shortner_three'):
-                res['shortner_three'] = SHORTENER_WEBSITE3
-                res['api_three'] = SHORTENER_API3
-            return res
+            return chat['settings']
         else:
             return default.copy()
 
@@ -204,7 +182,7 @@ class Database:
             )
             return result.modified_count
         except Exception as e:
-            logger.error("Failed to reset group settings: %s", e)
+            print(f"[ERROR] Failed to reset group settings: {e}")
             raise  
 
     async def disable_chat(self, chat, reason="No Reason"):
@@ -334,7 +312,7 @@ class Database:
         myquery = {"user_id": user_id, "hash": hash}
         newvalues = { "$set": value }
         return await self.verify_id.update_one(myquery, newvalues)
-        
+
     async def has_premium_access(self, user_id):
         user_data = await self.get_user(user_id)
         if user_data:
@@ -346,15 +324,55 @@ class Database:
             else:
                 await self.users.update_one({"id": user_id}, {"$set": {"expiry_time": None}})
         return False
-        
-    
+
+    async def check_daily_limit(self, user_id):
+        user_id = int(user_id)
+        if await self.has_premium_access(user_id):
+            return True
+        user = await self.users.find_one({"id": user_id})
+        if not user:
+            user = await self.users.find_one({"id": str(user_id)})
+        if not user:
+            return True
+
+        now = datetime.datetime.utcnow()
+        last_date = user.get("last_download_date")
+        if last_date:
+            if isinstance(last_date, datetime.datetime):
+                if last_date.tzinfo is not None:
+                    last_date = last_date.replace(tzinfo=None)
+                if (now - last_date).total_seconds() >= 86400:
+                    await self.users.update_one({"id": user_id}, {"$set": {"daily_downloads": 0, "last_download_date": now}})
+                    return True
+            else:
+                try:
+                    if str(last_date)[:10] != now.strftime("%Y-%m-%d"):
+                        await self.users.update_one({"id": user_id}, {"$set": {"daily_downloads": 0, "last_download_date": now}})
+                        return True
+                except Exception:
+                    pass
+
+        daily_downloads = user.get("daily_downloads", 0)
+        return daily_downloads < DAILY_DOWNLOAD_LIMIT
+
+    async def increase_daily_download(self, user_id):
+        user_id = int(user_id)
+        now = datetime.datetime.utcnow()
+        await self.users.update_one(
+            {"id": user_id},
+            {
+                "$inc": {"daily_downloads": 1},
+                "$set": {"last_download_date": now}
+            },
+            upsert=True
+        )
 
     async def update_one(self, filter_query, update_data):
         try:
             result = await self.users.update_one(filter_query, update_data)
             return result.matched_count == 1
         except Exception as e:
-            logger.error("Error updating document: %s", e)
+            print(f"Error updating document: {e}")
             return False
 
     async def get_expired(self, current_time):
@@ -368,6 +386,26 @@ class Database:
         return await self.update_one(
             {"id": user_id}, {"$set": {"expiry_time": None}}
         )
+
+    async def get_premium_trial(self, user_id):
+        user_id = int(user_id)
+        user_data = await self.get_user(user_id)
+        if not user_data:
+            return PREMIUM_TRIAL_COUNT
+        return user_data.get("premium_trial_remaining", PREMIUM_TRIAL_COUNT)
+
+    async def reduce_premium_trial(self, user_id):
+        user_id = int(user_id)
+        current = await self.get_premium_trial(user_id)
+        if current > 0:
+            new_count = current - 1
+            await self.users.update_one(
+                {"id": user_id},
+                {"$set": {"premium_trial_remaining": new_count}},
+                upsert=True
+            )
+            return new_count
+        return 0
 
     async def check_trial_status(self, user_id):
         user_data = await self.get_user(user_id)
@@ -449,9 +487,5 @@ class Database:
         await self.update_bot_setting(bot_id, 'MAINTENANCE', enable)
      
 db = Database(DATABASE_URI, DATABASE_NAME)    
-if MULTIPLE_DB and DATABASE_URI2:
-    db2 = Database(DATABASE_URI2, DATABASE_NAME)
-else:
-    db2 = db
-
+db2 = Database(DATABASE_URI2, DATABASE_NAME)
 
