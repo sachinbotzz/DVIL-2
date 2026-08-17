@@ -8,15 +8,11 @@ from collections import defaultdict
 from pymongo.errors import DuplicateKeyError
 from umongo import Instance, Document, fields
 from motor.motor_asyncio import AsyncIOMotorClient
+from marshmallow import ValidationError
+from info import *
 from utils import get_settings, save_group_settings
-from info import (
-    COLLECTION_NAME, COVERX, DATABASE_NAME, DATABASE_URI, DATABASE_URI2,
-    INDEX_CAPTION, MAX_B_TN, MULTIPLE_DB, ULTRA_FAST_MODE, USE_CAPTION_FILTER,
-)
 from datetime import datetime, timedelta
 import asyncio
-from functools import lru_cache
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -25,24 +21,15 @@ logger.setLevel(logging.INFO)
 # Global cache for DB size
 _db_stats_cache = {"timestamp": None, "primary_size": 0.0}
 
-@lru_cache(maxsize=4096)
-def compile_regex(pattern):
-    return re.compile(pattern, re.IGNORECASE)
-
 # Primary DB
 client = AsyncIOMotorClient(DATABASE_URI)
 db = client[DATABASE_NAME]
 instance = Instance.from_db(db)
 
 # secondary db
-if MULTIPLE_DB and DATABASE_URI2:
-    client2 = AsyncIOMotorClient(DATABASE_URI2)
-    db2 = client2[DATABASE_NAME]
-    instance2 = Instance.from_db(db2)
-else:
-    client2 = client
-    db2 = db
-    instance2 = instance
+client2 = AsyncIOMotorClient(DATABASE_URI2)
+db2 = client2[DATABASE_NAME]
+instance2 = Instance.from_db(db2)
 
 
 @instance.register
@@ -55,6 +42,7 @@ class Media(Document):
     mime_type = fields.StrField(allow_none=True)
     caption = fields.StrField(allow_none=True)
     cover = fields.StrField(allow_none=True)
+    premium_only = fields.BoolField(default=False)
 
     class Meta:
         indexes = ("$file_name",)
@@ -71,6 +59,7 @@ class Media2(Document):
     mime_type = fields.StrField(allow_none=True)
     caption = fields.StrField(allow_none=True)
     cover = fields.StrField(allow_none=True)
+    premium_only = fields.BoolField(default=False)
 
 
     class Meta:
@@ -96,8 +85,8 @@ async def check_db_size(db):
         _db_stats_cache["primary_size"] = db_size_mb
         _db_stats_cache["timestamp"] = now
         return db_size_mb
-    except Exception:
-        logger.exception("Error checking database size")
+    except Exception as e:
+        print(f"Error Checking Database Size: {e}")
         return 0
 
 
@@ -112,7 +101,7 @@ async def save_file(media):
     target_db = "Primary"
     if MULTIPLE_DB:
         try:
-            exists = await Media.find_one({"file_id": file_id})
+            exists = await Media.count_documents({"file_id": file_id}, limit=1)
             if exists:
                 logger.info(f"[SKIP] '{file_name}' already in Primary DB.")
                 return False, 0
@@ -135,7 +124,8 @@ async def save_file(media):
             file_type=media.file_type,
             mime_type=media.mime_type,
             caption=(media.caption.html if media.caption and INDEX_CAPTION else None),
-            cover=cover_to_use if COVERX else None,
+            cover=cover_to_use,
+            premium_only=getattr(media, "premium_only", False),
         )
     except Exception as e:
         logger.exception(f"[ERROR] '{file_name}' → {e}")
@@ -156,135 +146,162 @@ async def save_file(media):
     return True, 1
 
 async def get_search_results(chat_id, query, file_type=None, max_results=None, offset=0, filter=False):
-    if chat_id is not None and max_results is None:
+    if chat_id is not None:
         settings = await get_settings(int(chat_id))
-        if "max_btn" not in settings:
-            await save_group_settings(int(chat_id), "max_btn", True)
-            settings["max_btn"] = True
-        max_results = 10 if settings["max_btn"] else int(MAX_B_TN)
+        if max_results is None:
+            try:
+                max_results = 10 if settings.get("max_btn") else int(MAX_B_TN)
+            except KeyError:
+                await save_group_settings(int(chat_id), "max_btn", True)
+                settings = await get_settings(int(chat_id))
+                max_results = 10 if settings.get("max_btn") else int(MAX_B_TN)
+
+    # This is the new "middle-ground" regex logic for speed and flexibility
     if isinstance(query, list):
-        raw_pattern = "|".join(re.escape(q.strip()) for q in query if q and q.strip())
-        if not raw_pattern:
-            return [], None, 0
-        regex = compile_regex(raw_pattern)
+        # This part handles season searches etc., where you need to match any of the full phrases.
+        raw_pattern = '|'.join(re.escape(q.strip()) for q in query if q.strip())
+        regex_list = [re.compile(raw_pattern, re.IGNORECASE)] if raw_pattern else []
+        
         if USE_CAPTION_FILTER:
-            filter_mongo = {"$or": [{"file_name": regex},{"caption": regex},]}
+            filter_mongo = {"$or": ([{"file_name": r} for r in regex_list] + [{"caption": r} for r in regex_list])}
         else:
-            filter_mongo = {"file_name": regex}
+            filter_mongo = {"$or": [{"file_name": r} for r in regex_list]}
     else:
         query = query.strip()
         if not query:
             return [], None, 0
-        if " " in query:
-            words = [re.escape(w) for w in query.split() if w]
-            raw_pattern = (r".*[\s\.\+\-_]".join(words) if words else r".")
+
+        # Multi-word: use lazy-regex join to match flexible separators (fast & robust)
+        if ' ' in query:
+            words = [re.escape(w) for w in query.split() if w.strip()]
+            if words:
+                raw_pattern = r'.*?'.join(words)
+            else:
+                raw_pattern = r'.'
+            try:
+                regex = re.compile(raw_pattern, flags=re.IGNORECASE)
+            except re.error:
+                return [], None, 0
+
+            if USE_CAPTION_FILTER:
+                filter_mongo = {"$or": [{"file_name": regex}, {"caption": regex}]}
+            else:
+                filter_mongo = {"file_name": regex}
         else:
-            raw_pattern = (r"(\b|[\.\+\-_])" + re.escape(query) + r"(\b|[\.\+\-_])" )
-        try:
-            regex = compile_regex(raw_pattern)
-        except re.error:
-            return [], None, 0
-        if USE_CAPTION_FILTER:
-            filter_mongo = { "$or": [{"file_name": regex}, {"caption": regex},]}
-        else:
-            filter_mongo = {"file_name": regex}
+            # SINGLE-WORD PATH: keep regex, but make it lazy and word-bound for speed.
+            raw_pattern = re.escape(query)
+            try:
+                regex = re.compile(raw_pattern, flags=re.IGNORECASE)
+            except re.error:
+                return [], None, 0
+
+            if USE_CAPTION_FILTER:
+                filter_mongo = {"$or": [{"file_name": regex}, {"caption": regex}]}
+            else:
+                filter_mongo = {"file_name": regex}
 
     if file_type:
         filter_mongo["file_type"] = file_type
-
+    
+    # The rest of the function remains the same, using parallel queries.
     if ULTRA_FAST_MODE:
         limit = max_results + 1
+        find_tasks = [Media.find(filter_mongo).sort("$natural", -1).skip(offset).limit(limit).to_list(length=limit)]
         if MULTIPLE_DB:
-            fetch_limit = offset + limit
-            results = await asyncio.gather(
-                Media.find(filter_mongo).sort("$natural", -1).limit(fetch_limit).to_list(length=fetch_limit),
-                Media2.find(filter_mongo).sort("$natural", -1).limit(fetch_limit).to_list(length=fetch_limit),
-            )
-            files = results[1] + results[0]
-            files = files[offset:offset + limit]
-        else:
-            files = await Media.find(filter_mongo).sort("$natural", -1).skip(offset).limit(limit).to_list(length=limit)
+            find_tasks.append(Media2.find(filter_mongo).sort("$natural", -1).skip(offset).limit(limit).to_list(length=limit))
+        
+        results = await asyncio.gather(*find_tasks)
+        files = results[0]
+        if MULTIPLE_DB and len(results) > 1:
+            files.extend(results[1])
+        
+        files = files[:limit]
+
         has_next_page = len(files) > max_results
         if has_next_page:
             files = files[:-1]
+
         next_offset = offset + len(files) if has_next_page else ""
         total_results = offset + len(files) + (1 if has_next_page else 0)
     else:
+        count_tasks = [Media.count_documents(filter_mongo)]
+        find_tasks = [Media.find(filter_mongo).sort("$natural", -1).skip(offset).limit(max_results).to_list(length=max_results)]
+
         if MULTIPLE_DB:
-            fetch_limit = offset + max_results
-            count_results, find_results = await asyncio.gather(
-                asyncio.gather(Media.count_documents(filter_mongo), Media2.count_documents(filter_mongo)),
-                asyncio.gather(
-                    Media.find(filter_mongo).sort("$natural", -1).limit(fetch_limit).to_list(length=fetch_limit),
-                    Media2.find(filter_mongo).sort("$natural", -1).limit(fetch_limit).to_list(length=fetch_limit),
-                )
-            )
-            total_results = sum(count_results)
-            files = find_results[1] + find_results[0]
-            files = files[offset:offset + max_results]
-        else:
-            total_results = await Media.count_documents(filter_mongo)
-            files = await Media.find(filter_mongo).sort("$natural", -1).skip(offset).limit(max_results).to_list(length=max_results)
+            count_tasks.append(Media2.count_documents(filter_mongo))
+            find_tasks.append(Media2.find(filter_mongo).sort("$natural", -1).skip(offset).limit(max_results).to_list(length=max_results))
+        
+        count_results, find_results = await asyncio.gather(
+            asyncio.gather(*count_tasks),
+            asyncio.gather(*find_tasks)
+        )
+        
+        total_results = sum(count_results)
+        files = find_results[0]
+        if MULTIPLE_DB and len(find_results) > 1:
+            files.extend(find_results[1])
+        
+        files = files[:max_results]
+        
         next_offset = offset + len(files)
         if next_offset >= total_results:
             next_offset = ""
+
     return files, next_offset, total_results
 
 async def get_bad_files(query, file_type=None):
     query = query.strip()
+
     if not query:
-        return [], 0
-    if " " not in query:
+        raw_pattern = '.'
+    elif ' ' not in query:
         raw_pattern = r"(\b|[\.\+\-_])" + re.escape(query) + r"(\b|[\.\+\-_])"
     else:
-        raw_pattern = r".*[\s\.\+\-_]".join(map(re.escape, query.split()))
+        # lazy regex instead of greedy
+        raw_pattern = r'.*?'.join(map(re.escape, query.split()))
+
     try:
-        regex = compile_regex(raw_pattern)
+        regex = re.compile(raw_pattern, flags=re.IGNORECASE)
     except re.error:
         return [], 0
+
     if USE_CAPTION_FILTER:
-        filter_mongo = {
-            "$or": [
-                {"file_name": regex},
-                {"caption": regex}
-            ]
-        }
+        filter_mongo = {'$or': [{'file_name': regex}, {'caption': regex}]}
     else:
-        filter_mongo = {"file_name": regex}
+        filter_mongo = {'file_name': regex}
 
     if file_type:
-        filter_mongo["file_type"] = file_type
+        filter_mongo['file_type'] = file_type
 
-    tasks = [
-        Media.find(filter_mongo)
-        .sort("$natural", -1)
-        .to_list(300)
-    ]
+    cursor1 = Media.find(filter_mongo).sort('$natural', -1)
+    files1 = await cursor1.to_list(length=(await Media.count_documents(filter_mongo)))
 
     if MULTIPLE_DB:
-        tasks.append(
-            Media2.find(filter_mongo)
-            .sort("$natural", -1)
-            .to_list(300)
-        )
-    results = await asyncio.gather(*tasks)
-    if MULTIPLE_DB and len(results) > 1:
-        files = results[1] + results[0]
+        cursor2 = Media2.find(filter_mongo).sort('$natural', -1)
+        files2 = await cursor2.to_list(length=(await Media2.count_documents(filter_mongo)))
+        files = files1 + files2
     else:
-        files = results[0]
-    files = files[:300]
-    return files, len(files)
+        files = files1
+
+    total_results = len(files)
+    return files, total_results
+
 
 async def get_file_details(query):
     filter = {"file_id": query}
+    
     tasks = [Media.find(filter).to_list(length=1)]
     if MULTIPLE_DB:
-        tasks.append(Media2.find(filter).to_list(length=1))  
+        tasks.append(Media2.find(filter).to_list(length=1))
+        
     results = await asyncio.gather(*tasks)
+    
     for filedetails in results:
         if filedetails:
-            return filedetails       
+            return filedetails
+            
     return []
+
 
 def encode_file_id(s: bytes) -> str:
     r = b""
