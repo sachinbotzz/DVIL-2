@@ -598,7 +598,7 @@ async def finalize_and_post(client: Client, query: CallbackQuery, session_id: in
     logger.info(f"Poster to use: {poster_to_use}")
     logger.info(f"Final Caption Length: {len(final_caption)} characters.")
 
-            try:
+     try:
         if mode == "Photo":
             await client.send_photo(
                 chat_id=MOVIE_UPDATE_CHANNEL,
@@ -626,6 +626,12 @@ async def finalize_and_post(client: Client, query: CallbackQuery, session_id: in
         await status_msg.edit(error_text)
         logger.error(
             f"Failed to post '{session['movie_name']}': MessageTooLong error.", exc_info=True)
+
+    except Exception as e:
+        error_text = f"Failed to post to update channel.\n<b>Error:</b> <code>{e}</code>"
+        await status_msg.edit(error_text)
+        logger.error(
+            f"An unexpected error occurred while posting '{session['movie_name']}':", exc_info=True)
 
     except Exception as e:
         error_text = f"Failed to post to update channel.\n<b>Error:</b> <code>{e}</code>"
