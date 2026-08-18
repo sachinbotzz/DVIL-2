@@ -600,10 +600,13 @@ async def finalize_and_post(client: Client, query: CallbackQuery, session_id: in
 
     try:
         if mode == "Photo":
-            await client.send_photo(
-                chat_id=MOVIE_UPDATE_CHANNEL, photo=poster_to_use,
-                caption=final_caption, reply_markup=final_keyboard
-            )
+await client.send_photo(
+    chat_id=MOVIE_UPDATE_CHANNEL,
+    photo=poster_to_use,
+    caption=final_caption,
+    reply_markup=final_keyboard,
+    has_spoiler=True
+)
         else:
             text_content = f"<a href='{poster_to_use}'>&#8205;</a>{final_caption}" if poster_to_use else final_caption
             await client.send_message(
