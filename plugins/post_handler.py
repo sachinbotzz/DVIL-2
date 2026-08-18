@@ -598,28 +598,28 @@ async def finalize_and_post(client: Client, query: CallbackQuery, session_id: in
     logger.info(f"Poster to use: {poster_to_use}")
     logger.info(f"Final Caption Length: {len(final_caption)} characters.")
 
-    try:
+          try:
         if mode == "Photo":
-await client.send_photo(
-    chat_id=MOVIE_UPDATE_CHANNEL,
-    photo=poster_to_use,
-    caption=final_caption,
-    reply_markup=final_keyboard,
-    has_spoiler=True
-)
+            await client.send_photo(
+                chat_id=MOVIE_UPDATE_CHANNEL,
+                photo=poster_to_use,
+                caption=final_caption,
+                reply_markup=final_keyboard,
+                has_spoiler=True
+            )
         else:
             text_content = f"<a href='{poster_to_use}'>&#8205;</a>{final_caption}" if poster_to_use else final_caption
             await client.send_message(
-                chat_id=MOVIE_UPDATE_CHANNEL, text=text_content,
-                
-                reply_markup=final_keyboard, disable_web_page_preview=False,
+                chat_id=MOVIE_UPDATE_CHANNEL,
+                text=text_content,
+                reply_markup=final_keyboard,
+                disable_web_page_preview=False,
                 invert_media=ABOVE_PREVIEW
             )
 
         await status_msg.edit("✅ Post has been sent to the update channel.")
         logger.info(
             f"Successfully posted '{session['movie_name']}' to the update channel.")
-
     except MessageTooLong:
         error_text = "<b>Post Failed</b>\n\nThe final caption is too long for a Telegram message (limit is 4096 characters). Please shorten the plot or other text and try again."
         await status_msg.edit(error_text)
