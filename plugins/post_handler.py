@@ -598,7 +598,7 @@ async def finalize_and_post(client: Client, query: CallbackQuery, session_id: in
     logger.info(f"Poster to use: {poster_to_use}")
     logger.info(f"Final Caption Length: {len(final_caption)} characters.")
 
-         try:
+     try:
         if mode == "Photo":
             await client.send_photo(
                 chat_id=MOVIE_UPDATE_CHANNEL,
