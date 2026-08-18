@@ -2,6 +2,7 @@ import asyncio
 import logging
 import re
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -598,22 +599,18 @@ async def finalize_and_post(client: Client, query: CallbackQuery, session_id: in
     logger.info(f"Poster to use: {poster_to_use}")
     logger.info(f"Final Caption Length: {len(final_caption)} characters.")
 
-     try:
+    try:
         if mode == "Photo":
             await client.send_photo(
-                chat_id=MOVIE_UPDATE_CHANNEL,
-                photo=poster_to_use,
-                caption=final_caption,
-                reply_markup=final_keyboard,
-                has_spoiler=True
+                chat_id=MOVIE_UPDATE_CHANNEL, photo=poster_to_use,
+                caption=final_caption, reply_markup=final_keyboard
             )
         else:
             text_content = f"<a href='{poster_to_use}'>&#8205;</a>{final_caption}" if poster_to_use else final_caption
             await client.send_message(
-                chat_id=MOVIE_UPDATE_CHANNEL,
-                text=text_content,
-                reply_markup=final_keyboard,
-                disable_web_page_preview=False,
+                chat_id=MOVIE_UPDATE_CHANNEL, text=text_content,
+                
+                reply_markup=final_keyboard, disable_web_page_preview=False,
                 invert_media=ABOVE_PREVIEW
             )
 
@@ -626,16 +623,10 @@ async def finalize_and_post(client: Client, query: CallbackQuery, session_id: in
         await status_msg.edit(error_text)
         logger.error(
             f"Failed to post '{session['movie_name']}': MessageTooLong error.", exc_info=True)
-
     except Exception as e:
         error_text = f"Failed to post to update channel.\n<b>Error:</b> <code>{e}</code>"
         await status_msg.edit(error_text)
         logger.error(
             f"An unexpected error occurred while posting '{session['movie_name']}':", exc_info=True)
 
-    except Exception as e:
-        error_text = f"Failed to post to update channel.\n<b>Error:</b> <code>{e}</code>"
-        await status_msg.edit(error_text)
-        logger.error(
-            f"An unexpected error occurred while posting '{session['movie_name']}':", exc_info=True)
 #code is created by @bharath_boy for public use so atleast don't remove credits
