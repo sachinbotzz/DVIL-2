@@ -1,10 +1,11 @@
 
 import re
+from datetime import datetime
 from plugins.Dreamxfutures.Imdbposter import get_movie_details, fetch_image
 from database.users_chats_db import db
 from pyrogram import Client, filters, enums
-from info import CHANNELS, MOVIE_UPDATE_CHANNEL
-from database.ia_filterdb import save_file
+from info import CHANNELS, MOVIE_UPDATE_CHANNEL, GRP_LNK
+from database.ia_filterdb import save_file, get_search_results
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import temp
 
@@ -31,8 +32,8 @@ OTT_PLATFORMS = {
     "hoichoi": "Hoichoi",
     "sunnxt": "Sun NXT",
     "viki": "Viki",
-    
 }
+
 media_filter = filters.document | filters.video | filters.audio
 
 @Client.on_message(filters.chat(CHANNELS) & media_filter)
@@ -56,56 +57,133 @@ async def media(bot, message):
 
 async def send_msg(bot, filename, caption): 
     try:
-        filename = clean_mentions_links(filename).title()        
-        caption = clean_mentions_links(caption).lower()          
-        year_match = re.search(r"\b(19|20)\d{2}\b", caption)
-        year = year_match.group(0) if year_match else None
-        pattern = r"(?i)(?:s|season)0*(\d{1,2})"
-        season = re.search(pattern, caption) or re.search(pattern, filename)
-        season = season.group(1) if season else None 
-        if year and year in filename:
-            filename = filename[: filename.find(year) + 4]  
-        elif season and season in filename:
-            filename = filename[: filename.find(season) + 1]
-        qualities = ["ORG", "org", "hdcam", "HDCAM", "HQ", "hq", "HDRip", "hdrip", "camrip", "CAMRip", "hdtc", "predvd", "DVDscr", "dvdscr", "dvdrip", "HDTC", "dvdscreen", "HDTS", "hdts"]
-        quality = await get_qualities(caption.lower(), qualities) or "HDRip"    
-        language = ""
-        possible_languages = CAPTION_LANGUAGES
-        for lang in possible_languages:
-            if lang.lower() in caption.lower():
-                language += f"{lang}, "
-        language = language[:-2] if language else "No idea 😄"
-        tag = media_tag(filename, caption)
-        ott_platform = extract_ott_platform(filename + " " + caption)           
-        filename = re.sub(r"[()\[\]{}:;'\-!,.?_\"]", " ", filename)  
-        filename = re.sub(r"\s+", " ", filename).strip()
+        clean_name = clean_mentions_links(filename).title()        
+        clean_cap = clean_mentions_links(caption).lower()          
+        
+        year_match = re.search(r"\b(19|20)\d{2}\b", clean_cap) or re.search(r"\b(19|20)\d{2}\b", clean_name)
+        extracted_year = year_match.group(0) if year_match else ""
+
+        season_match = re.search(r"(?i)(?:s|season)0*(\d{1,2})", clean_cap) or re.search(r"(?i)(?:s|season)0*(\d{1,2})", clean_name)
+        season = season_match.group(1) if season_match else None 
+
+        search_title = clean_name
+        if extracted_year and extracted_year in search_title:
+            search_title = search_title[: search_title.find(extracted_year) + 4]  
+        elif season and season in search_title:
+            search_title = search_title[: search_title.find(season) + 1]
+            
+        clean_title = re.sub(r"[()\[\]{}:;'\-!,.?_\"]", " ", search_title)  
+        clean_title = re.sub(r"\s+", " ", clean_title).strip()
+
+        qualities_str = await get_qualities(f"{clean_name} {clean_cap}")
+        
+        languages = []
+        for lang in CAPTION_LANGUAGES:
+            if lang.lower() in clean_cap or lang.lower() in clean_name.lower():
+                if lang not in languages:
+                    languages.append(lang)
+        
+        ott_platform = extract_ott_platform(f"{clean_name} {clean_cap}")
+        
         rating = "N/A"
+        duration = "N/A"
+        genres = "N/A"
+        imdb_url = None
         resized_poster = None
-        if await db.add_name(filename):                                        
-            imdb = await get_movie_details(filename)                          
+        movie_name_display = clean_title
+        year_display = extracted_year
+
+        if await db.add_name(clean_title):
+            imdb = await get_movie_details(clean_title)
             if imdb:
+                if imdb.get('title'):
+                    movie_name_display = imdb.get('title')
+                if imdb.get('year'):
+                    year_display = str(imdb.get('year'))
+                if imdb.get('genres'):
+                    genres = imdb.get('genres')
+                if imdb.get('rating'):
+                    rating = format_rating(imdb.get('rating'))
+                if imdb.get('runtime'):
+                    duration = format_runtime(imdb.get('runtime'))
+                if imdb.get('languages') and not languages:
+                    imdb_langs = imdb.get('languages')
+                    if isinstance(imdb_langs, str):
+                        languages = [l.strip() for l in imdb_langs.split(",") if l.strip()]
+                    elif isinstance(imdb_langs, list):
+                        languages = imdb_langs
+                
+                imdb_url = imdb.get('url') or (f"https://www.imdb.com/title/{imdb.get('imdb_id')}" if imdb.get('imdb_id') else None)
+                
                 poster_url = imdb.get('poster_url')
-                rating = imdb.get("rating", "N/A")
                 if poster_url:
-                    resized_poster = await fetch_image(poster_url)            
+                    resized_poster = await fetch_image(poster_url)
+            
+            if imdb_url:
+                imdb_info_text = f'<a href="{imdb_url}">IMDB INFO</a>'
+            else:
+                imdb_info_text = "N/A"
+
+            audio_text = ", ".join(languages) if languages else "N/A"
+
+            title_year_str = movie_name_display
+            if year_display and str(year_display) not in movie_name_display:
+                title_year_str = f"{movie_name_display} {year_display}"
+
+            current_time = datetime.now().strftime("%d %b %Y | %I:%M %p")
+
             text = (
-                f"📥 𝗡𝗘𝗪 𝗙𝗜𝗟𝗘 𝗔𝗗𝗗𝗘𝗗 📥\n\n"
-                f"🎬 𝗧𝗶𝘁𝗹𝗲 : ✨ <code>{filename}</code> {tag}\n"
-                f"─┉─•✦•─┉─\n"
-                f"🛡️ 𝗢𝗧𝗧 : <b>{ott_platform}</b>\n"
-                f"📽️ 𝗤𝘂𝗮𝗹𝗶𝘁𝘆 : <b>{quality}</b>\n"
-                f"🎧 𝗔𝘂𝗱𝗶𝗼  : <b>{language}</b>\n"
-                f"🌟 𝗥𝗮𝘁𝗶𝗻𝗴  : <b>{rating}</b>\n"
-                f"─┉─•✦•─┉─\n"
-                f"🔎 𝗦𝗲𝗮𝗿𝗰𝗵 → {temp.B_LINK}"
+                f"📥 NEW FILE ADDED ✅\n\n"
+                f"🎬 {title_year_str} ║ ⭐ {imdb_info_text}\n\n"
+                f"🎭 GENRES : {genres}\n"
+                f"🌐 OTT : {ott_platform}\n\n"
+                f"🎥 QUALITY : {qualities_str}\n\n"
+                f"🔊 AUDIO : {audio_text}\n\n"
+                f"🎞️ RATING : {rating}\n"
+                f"⏱️ DURATION : {duration}\n\n"
+                f"⚡ Powered by - <a href=\"https://t.me/MovieHuntZone\">Movie Hunt Zone</a>\n\n"
+                f"🕒 {current_time}"
             )
-            search_movie = filename.replace(" ", '-')
-            btn = [[InlineKeyboardButton(' ɢᴇᴛ ғɪʟᴇs ', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{search_movie}")]]
+
+            search_movie = clean_title.replace(" ", '-')
+            
+            db_files = []
+            try:
+                db_files, _, _ = await get_search_results(chat_id=None, query=clean_title, max_results=30)
+            except Exception:
+                pass
+            
+            combined_qualities_text = f"{clean_name} {clean_cap} " + " ".join([f"{f.file_name} {getattr(f, 'caption', '') or ''}" for f in db_files])
+            combined_qualities_text = combined_qualities_text.lower()
+
+            quality_buttons = []
+            if re.search(r'\b480p?\b', combined_qualities_text):
+                quality_buttons.append(InlineKeyboardButton('🟢 480p', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{search_movie}-480p"))
+            if re.search(r'\b720p?\b', combined_qualities_text):
+                quality_buttons.append(InlineKeyboardButton('🔵 720p', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{search_movie}-720p"))
+            if re.search(r'\b1080p?\b', combined_qualities_text):
+                quality_buttons.append(InlineKeyboardButton('🟣 1080p', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{search_movie}-1080p"))
+            if re.search(r'\b(2160p?|4k)\b', combined_qualities_text):
+                quality_buttons.append(InlineKeyboardButton('🟠 4K', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{search_movie}-4k"))
+
+            if not quality_buttons:
+                if qualities_str != "N/A":
+                    quality_buttons.append(InlineKeyboardButton(f'🟢 {qualities_str}', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{search_movie}"))
+                else:
+                    quality_buttons.append(InlineKeyboardButton('🟢 720p', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{search_movie}"))
+
+            btn = [
+                [InlineKeyboardButton('🎬 Available Quality', url=f"https://telegram.me/{temp.U_NAME}?start=getfile-{search_movie}")],
+                quality_buttons,
+                [InlineKeyboardButton('♻️ Movie Search Group', url=GRP_LNK or f"https://telegram.me/{temp.U_NAME}")]
+            ]
+
             if resized_poster:
                 await bot.send_photo(
                     chat_id=MOVIE_UPDATE_CHANNEL,
                     photo=resized_poster,
                     caption=text,
+                    has_spoiler=True,
                     reply_markup=InlineKeyboardMarkup(btn),
                     parse_mode=enums.ParseMode.HTML
                 )
@@ -123,14 +201,56 @@ async def send_msg(bot, filename, caption):
 def clean_mentions_links(text: str) -> str:
     return re.sub(r'@[^ \n\r\t.,:;!?()\[\]{}<>\\/"\'=_%]+|\bwww\.[^\s\]\)]+|\([\@^]+\)|\[[\@^]+\]', '', text).strip()
 
-async def get_qualities(text, qualities: list):
-    """Get all Quality from text"""
-    quality = []
-    for q in qualities:
-        if q in text:
-            quality.append(q)
-    quality = ", ".join(quality)
-    return quality[:-2] if quality.endswith(", ") else quality
+def format_runtime(runtime_raw):
+    if not runtime_raw or str(runtime_raw).strip() in ("", "N/A", "None"):
+        return "N/A"
+    first_rt = str(runtime_raw).split(",")[0].strip()
+    digits = re.findall(r"\d+", first_rt)
+    if digits:
+        try:
+            total_mins = int(digits[0])
+            hours = total_mins // 60
+            mins = total_mins % 60
+            if hours > 0 and mins > 0:
+                return f"{hours}h {mins}m"
+            elif hours > 0:
+                return f"{hours}h"
+            else:
+                return f"{mins}m"
+        except Exception:
+            pass
+    return str(runtime_raw)
+
+def format_rating(rating_raw):
+    if not rating_raw or str(rating_raw).strip() in ("", "N/A", "None"):
+        return "N/A"
+    match = re.search(r"(\d+(?:\.\d+)?)", str(rating_raw))
+    if match:
+        return match.group(1)
+    return str(rating_raw)
+
+async def get_qualities(text):
+    quality_map = [
+        ("480p", ["480p", "480"]),
+        ("720p", ["720p", "720"]),
+        ("1080p", ["1080p", "1080"]),
+        ("2160p", ["2160p", "2160", "4k"]),
+        ("HDRip", ["hdrip"]),
+        ("HDCAM", ["hdcam", "camrip"]),
+        ("HQ", ["hq"]),
+        ("WEB-DL", ["web-dl", "webrip"]),
+    ]
+    found = []
+    text_lower = text.lower()
+    for std_name, patterns in quality_map:
+        for p in patterns:
+            if re.search(r'\b' + re.escape(p) + r'\b', text_lower):
+                if std_name not in found:
+                    found.append(std_name)
+                break
+    if found:
+        return ", ".join(found)
+    return "N/A"
 
 def extract_ott_platform(text):
     text_lower = text.lower()
@@ -139,8 +259,8 @@ def extract_ott_platform(text):
         if key in text_lower:
             found.add(platform)
     if found:
-        return " | ".join(found)
-    return "Not Sure 😄"
+        return ", ".join(sorted(found))
+    return "N/A"
 
 def media_tag(filename, caption):
     text = f"{filename} {caption}".lower()
@@ -148,3 +268,4 @@ def media_tag(filename, caption):
     if re.search(pattern, text, re.IGNORECASE):
         return '#TV_SERIES'
     return '#MOVIE'
+
