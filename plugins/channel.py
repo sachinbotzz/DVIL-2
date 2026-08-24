@@ -6,7 +6,7 @@ from collections import defaultdict
 from plugins.Dreamxfutures.Imdbposter import get_movie_detailsx, fetch_image, get_movie_details
 from database.users_chats_db import db
 from pyrogram import Client, filters, enums
-from info import CHANNELS, MOVIE_UPDATE_CHANNEL, LINK_PREVIEW, ABOVE_PREVIEW, BAD_WORDS, LANDSCAPE_POSTER, TMDB_POSTER
+from info import CHANNELS, MOVIE_UPDATE_CHANNEL, LINK_PREVIEW, ABOVE_PREVIEW, BAD_WORDS, LANDSCAPE_POSTER, TMDB_POSTER, GRP_LNK
 from Script import script
 from database.ia_filterdb import save_file
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -324,7 +324,8 @@ async def _process_with_lock(bot, filename, caption, media_info, base_name, proc
             "poster_url": details.get("backdrop_url") if LANDSCAPE_POSTER and TMDB_POSTER and details.get("backdrop_url") and not error_tmdb else details.get("poster_url"),
             "genres": genres,
             "rating": details.get("rating", "N/A"),
-            "imdb_url": details.get("url", "")if not TMDB_POSTER or error_tmdb else details.get("tmdb_url"),
+            "runtime": details.get("runtime", "N/A"),
+            "imdb_url": details.get("url", ""),
             "year": details.get("year") or media_info["year"],
             "tag": media_info["tag"],
             "ott_platform": media_info["ott_platform"],
@@ -358,6 +359,55 @@ async def _process_with_lock(bot, filename, caption, media_info, base_name, proc
         movie_doc["files"].append(file_data)
         schedule_update(bot, base_name)
 
+def build_movie_update_buttons(movie_doc, base_name):
+    search_movie = base_name.replace(' ', '-')
+    all_qualities_text = ""
+    for f in movie_doc.get("files", []):
+        all_qualities_text += f" {f.get('quality', '')} {f.get('filename', '')} {f.get('processed', '')}"
+    all_qualities_text = all_qualities_text.lower()
+    
+    quality_buttons = []
+    if re.search(r'\b480p?\b', all_qualities_text):
+        quality_buttons.append(InlineKeyboardButton('🟢 480p', url=f"https://t.me/{temp.U_NAME}?start=getfile-{search_movie}-480p"))
+    if re.search(r'\b720p?\b', all_qualities_text):
+        quality_buttons.append(InlineKeyboardButton('🔵 720p', url=f"https://t.me/{temp.U_NAME}?start=getfile-{search_movie}-720p"))
+    if re.search(r'\b1080p?\b', all_qualities_text):
+        quality_buttons.append(InlineKeyboardButton('🟣 1080p', url=f"https://t.me/{temp.U_NAME}?start=getfile-{search_movie}-1080p"))
+    if re.search(r'\b(2160p?|4k)\b', all_qualities_text):
+        quality_buttons.append(InlineKeyboardButton('🟠 4K', url=f"https://t.me/{temp.U_NAME}?start=getfile-{search_movie}-4k"))
+
+    if not quality_buttons:
+        quality_buttons.append(InlineKeyboardButton('🟢 720p', url=f"https://t.me/{temp.U_NAME}?start=getfile-{search_movie}"))
+
+    group_url = GRP_LNK if GRP_LNK else f"https://t.me/{temp.U_NAME}"
+
+    btn_rows = [
+        [InlineKeyboardButton('🎬 Available Quality', url=f"https://t.me/{temp.U_NAME}?start=getfile-{search_movie}")],
+        quality_buttons,
+        [InlineKeyboardButton('♻️ Movie Search Group', url=group_url)]
+    ]
+    return InlineKeyboardMarkup(btn_rows)
+
+def format_runtime(runtime_raw):
+    if not runtime_raw or str(runtime_raw).strip() in ("", "N/A", "None"):
+        return "N/A"
+    first_rt = str(runtime_raw).split(",")[0].strip()
+    digits = re.findall(r"\d+", first_rt)
+    if digits:
+        try:
+            total_mins = int(digits[0])
+            hours = total_mins // 60
+            mins = total_mins % 60
+            if hours > 0 and mins > 0:
+                return f"{hours}h {mins}m"
+            elif hours > 0:
+                return f"{hours}h"
+            else:
+                return f"{mins}m"
+        except Exception:
+            pass
+    return str(runtime_raw)
+
 async def send_movie_update(bot, base_name):
     max_retries = 3
     for attempt in range(max_retries):
@@ -367,12 +417,7 @@ async def send_movie_update(bot, base_name):
                 return None
 
             text = generate_movie_message(movie_doc, base_name)
-            buttons = InlineKeyboardMarkup([[
-                InlineKeyboardButton(
-                    'ɢᴇᴛ ғɪʟᴇs',
-                    url=f"https://t.me/{temp.U_NAME}?start=getfile-{base_name.replace(' ', '-')}"
-                )
-            ]])
+            buttons = build_movie_update_buttons(movie_doc, base_name)
             size=(2560, 1440) if LANDSCAPE_POSTER and TMDB_POSTER and movie_doc.get("is_backdrop") and not movie_doc.get("error_tmdb") else (853, 1280)
             if movie_doc.get("poster_url") and not LINK_PREVIEW:
                 resized_poster = await fetch_image(movie_doc["poster_url"], size)
@@ -382,7 +427,8 @@ async def send_movie_update(bot, base_name):
                         photo=resized_poster,
                         caption=text,
                         reply_markup=buttons,
-                        parse_mode=enums.ParseMode.HTML
+                        parse_mode=enums.ParseMode.HTML,
+                        has_spoiler=True
                     )
                     is_photo = True
                 else:
@@ -426,12 +472,7 @@ async def update_movie_message(bot, base_name):
             return
 
         text = generate_movie_message(movie_doc, base_name)
-        buttons = InlineKeyboardMarkup([[
-            InlineKeyboardButton(
-                'ɢᴇᴛ ғɪʟᴇs',
-                url=f"https://t.me/{temp.U_NAME}?start=getfile-{base_name.replace(' ', '-')}"
-            )
-        ]])
+        buttons = build_movie_update_buttons(movie_doc, base_name)
 
         message_id = movie_doc.get("message_id")
         is_photo = movie_doc.get("is_photo", False)
@@ -544,17 +585,21 @@ def generate_movie_message(movie_doc, base_name):
     quality_str = ", ".join(sorted(all_qualities)) if all_qualities else "N/A"
     language_str = ", ".join(sorted(all_languages)) if all_languages else "N/A"
     ott_str = ", ".join(sorted(all_ott_platforms)) if all_ott_platforms else "N/A"
-    rating=movie_doc.get("rating", "-")
+    rating = movie_doc.get("rating", "N/A")
     try:
         r = float(rating)
     except (TypeError, ValueError):
         r = 0.0
 
-    rating_text = "-" if r == 0.0 else str(rating)
+    rating_text = "N/A" if r == 0.0 else str(rating)
     year_val = str(movie_doc.get("year") or "")
     filename_display = base_name
     if year_val and filename_display.strip().endswith(year_val):
         filename_display = filename_display.strip()[:-len(year_val)].strip()
+
+    runtime = format_runtime(movie_doc.get("runtime", "N/A"))
+    date_text = datetime.now().strftime("%d %b %Y | %I:%M %p")
+
     return script.MOVIE_UPDATE_NOTIFY_TXT.format(
         poster_url=movie_doc.get("poster_url", ""),
         imdb_url=movie_doc.get("imdb_url", ""),
@@ -567,5 +612,7 @@ def generate_movie_message(movie_doc, base_name):
         language=language_str,
         episodes=epi_block,
         rating=rating_text,
+        runtime=runtime,
+        date=date_text,
         search_link=temp.B_LINK
-)
+    )
