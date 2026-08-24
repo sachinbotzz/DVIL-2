@@ -315,23 +315,23 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 @𝐌𝐎𝐕𝐈𝐄 𝐑𝐄𝐐𝐔𝐄𝐒𝐓 𝐆𝐑𝐎𝐔𝐏</a></blockquote></b>"""
     
     MOVIE_UPDATE_NOTIFY_TXT = """
-<blockquote>📥 <b>NEW FILE ADDED ✅</b></blockquote>
+<blockquote><b>📥 NEW FILE ADDED ✅</b></blockquote>
 
-🎬 <b>{filename} {year}</b> ║ ⭐ <a href="{imdb_url}">IMDB INFO</a>
+<b>🎬 {filename} {year} ║ ⭐ <a href="{imdb_url}">IMDB INFO</a></b>
 
-🎭 <b>GENRES</b> : {genres}
-🌐 <b>OTT</b> : {ott}
+<b>🎭 GENRES : {genres}</b>
+<b>🌐 OTT : {ott}</b>
 
-🎥 <b>QUALITY</b> : {quality}
+<b>🎥 QUALITY : {quality}</b>
 
-🔊 <b>AUDIO</b> : {language}
+<b>🔊 AUDIO : {language}</b>
 
-🎞️ <b>RATING</b> : {rating}
-⏱️ <b>DURATION</b> : {runtime}
+<b>🎞️ RATING : {rating}</b>
+<b>⏱️ DURATION : {runtime}</b>
 
-⚡ Powered by - <a href="https://t.me/MovieHuntZone">Movie Hunt Zone</a>
+<blockquote><b>⚡ Powered by - <a href="https://t.me/MovieHuntZone">Movie Hunt Zone</a></b></blockquote>
 
-🕒 {date}
+<b>🕒 {date}</b>
 """
 
 
