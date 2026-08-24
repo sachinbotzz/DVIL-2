@@ -598,7 +598,13 @@ def generate_movie_message(movie_doc, base_name):
         filename_display = filename_display.strip()[:-len(year_val)].strip()
 
     runtime = format_runtime(movie_doc.get("runtime", "N/A"))
-    date_text = datetime.now().strftime("%d %b %Y | %I:%M %p")
+
+    try:
+        from pytz import timezone
+        india_time = datetime.now(timezone("Asia/Kolkata"))
+        date_text = india_time.strftime("%d %b %Y | %I:%M %p")
+    except Exception:
+        date_text = datetime.now().strftime("%d %b %Y | %I:%M %p")
 
     return script.MOVIE_UPDATE_NOTIFY_TXT.format(
         poster_url=movie_doc.get("poster_url", ""),
