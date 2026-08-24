@@ -2,6 +2,7 @@ import re
 import logging
 import asyncio
 from datetime import datetime
+from pytz import timezone
 from collections import defaultdict
 from plugins.Dreamxfutures.Imdbposter import get_movie_detailsx, fetch_image, get_movie_details
 from database.users_chats_db import db
@@ -599,15 +600,8 @@ def generate_movie_message(movie_doc, base_name):
 
     runtime = format_runtime(movie_doc.get("runtime", "N/A"))
 
-<<<<<<< HEAD
-    from pytz import timezone
     india_time = datetime.now(timezone("Asia/Kolkata"))
     date_text = india_time.strftime("%d %b %Y | %I:%M %p")
-=======
-from pytz import timezone
-india_time = datetime.now(timezone("Asia/Kolkata"))
-date_text = india_time.strftime("%d %b %Y | %I:%M %p")
->>>>>>> d50368de1433df792c2b036726f6ef378af0ec72
 
     return script.MOVIE_UPDATE_NOTIFY_TXT.format(
         poster_url=movie_doc.get("poster_url", ""),
