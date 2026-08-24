@@ -1,8 +1,10 @@
-import os
+import logging
 from plugins.Dreamxfutures.fotnt_string import Fonts
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+
+logger = logging.getLogger(__name__)
 
 @Client.on_message(filters.private & filters.command(["font"]))
 async def style_buttons(c, m, cb=False):
@@ -168,12 +170,18 @@ async def style(c, m):
     if style == 'frozen':
         cls = Fonts.frozen
 
-    r, oldtxt = m.message.reply_to_message.text.split(None, 1) 
+    if m.message.reply_to_message and m.message.reply_to_message.text:
+        try:
+            oldtxt = m.message.reply_to_message.text.split(None, 1)[1]
+        except IndexError:
+            oldtxt = m.message.text
+    else:
+        oldtxt = m.message.text
     new_text = cls(oldtxt)            
     try:
         await m.message.edit_text(f"`{new_text}`\n\n👆 Click To Copy", reply_markup=m.message.reply_markup)
     except Exception as e:
-        print(e)
+        logger.error("Font style edit error: %s", e)
 
 
 

@@ -1,125 +1,146 @@
-<p align="center"> <img src="https://github.com/DreamXBotz/Pics/blob/main/dreamxbotz.jpg"> </p>
-<h1 align="center"> 𝓓𝓻𝓮𝓪𝓶𝔁𝓑𝓸𝓽𝔃 </h1>
+<div align="center">
 
-**OWNER**
-<!-- > ## ⚠ <u>Under Maintenance</u> ⚠  
-> This repository is currently under maintenance. Please **DO NOT deploy** until further notice. -->
+  <h1><b>💥 INCREDIBLE HULK BOT 💥</b></h1>
 
-* [![Contact Developer](https://img.shields.io/static/v1?label=Contact+Developer&message=On+Telegram&color=critical)](https://t.me/Deendayal_Support_Group)
+  <p><b>The Ultimate Power-Packed Auto Filter, Fast Streaming & Media Indexer Telegram Bot</b></p>
 
-First Check our **Demo** bot -
+  <p>
+    <a href="https://t.me/IncredibleHulk_bot"><img src="https://img.shields.io/badge/Telegram_Bot-@IncredibleHulk__bot-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" alt="Bot Link"></a>
+    <a href="https://t.me/Deendayal_Support_Group"><img src="https://img.shields.io/badge/Support_Group-Join_Now-0088cc?style=for-the-badge&logo=telegram&logoColor=white" alt="Support Group"></a>
+    <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
+    <a href="https://mongodb.com"><img src="https://img.shields.io/badge/MongoDB-DualDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB"></a>
+  </p>
 
-[![Click Here](https://img.shields.io/badge/Demo%20Bot-Click%20Here-blue?style=flat&logo=telegram&labelColor=white&link=https://t.me/Princess_V4_bot)](https://t.me/Princess_V4_bot)
+  ---
+</div>
 
-# New Version Released - V1.2
-- Group Owners Can Manage Groups From Bot PM.
-- Added /reload Command 
-- Now Owner Can Reset All Connect Groups Settings 
-- 3 Verify
+## 📌 About
 
-## Special Thanks To
+**Incredible Hulk Bot** is an ultra-fast, feature-rich Telegram Auto Filter and Media Distribution Bot built for high performance, seamless file searching, instant online streaming, and community management. 
 
-### 🌴 [⌯ Ꭺɴᴏɴʏᴍᴏᴜꜱ | ×͜× |](https://t.me/BeingXAnonymous)
+Equipped with **Dual MongoDB Cluster Architecture**, **3-Step Shortlink Verification**, **Auto-Indexing above 2GB**, and **AI-Powered Spell Checking**, it delivers an unmatched media experience for groups and private users alike.
 
-### 🌴 [Hᴀʀsʜᴀʟ Pᴜʀᴏʜɪᴛ Eᴅɪᴛs](https://github.com/HarshalPurohitEdits)
+---
 
-### 🌴 [Sᴜᴘᴘᴏʀᴛ Gʀᴏᴜᴘ](https://t.me/Deendayal_Support_Group)
+## 🚀 Live Demo
 
-### Need Deployment Support?
+Experience the lightning-fast speed and feature suite directly on Telegram:
 
-If you encounter any issues **Deploying** the bot, feel free to seek assistance in our **support group**:
+<div align="center">
+  <a href="https://t.me/IncredibleHulk_bot">
+    <img src="https://img.shields.io/badge/🤖%20Try%20Bot%20Now-@IncredibleHulk__bot-blueviolet?style=for-the-badge&logo=telegram" alt="Try Bot" width="320">
+  </a>
+</div>
 
-[![Join Support Group    ](https://img.shields.io/badge/Join%20Support%20Group-Click%20Here-blue?style=flat&logo=telegram&labelColor=white&link=https://t.me/Deendayal_Support_Group)](https://t.me/Deendayal_Support_Group)
+---
 
-#𝑫𝒐𝒖𝒃𝒍𝒆 𝑫𝑩 𝒔𝒖𝒑𝒑𝒐𝒓𝒕
+## 🌟 Features Overview
 
-  **features**
-- [x] 𝒔𝒕𝒓𝒆𝒂𝒎 𝒎𝒐𝒅𝒆 𝒐𝒏 𝒐𝒇𝒇 
-- [x] 3 𝑽𝒆𝒓𝒊𝒇𝒚
-- [x] 𝑴𝒖𝒍𝒕𝒊 𝒇𝒔𝒖𝒃 𝒔𝒖𝒑𝒑𝒐𝒓𝒕 𝒂𝒅𝒎𝒊𝒏𝒔 𝒂𝒏𝒅 𝒈𝒓𝒐𝒖𝒑 𝒂𝒅𝒎𝒊𝒏
-- [x] 𝑼𝒑𝒅𝒂𝒕𝒆 𝒎𝒐𝒗𝒊𝒆 𝒊𝒏𝒇𝒐𝒓𝒎𝒂𝒕𝒊𝒐𝒏 𝒐𝒏 𝒐𝒇𝒇 𝒄𝒐𝒎𝒎𝒂𝒏𝒅
-- [x] 𝑷𝒎 𝒔𝒆𝒂𝒓𝒄𝒉 𝒐𝒏 𝒐𝒇𝒇 𝒄𝒐𝒎𝒎𝒂𝒏𝒅 
-- [x] 𝑽𝒆𝒓𝒊𝒇𝒊𝒆𝒅 𝑼𝒔𝒆𝒓 𝒄𝒐𝒖𝒏𝒕𝒆𝒓
-- [x] 𝑼𝒑𝒅𝒂𝒕𝒆 𝒎𝒐𝒗𝒊𝒆 𝒊𝒏𝒇𝒐𝒓𝒎𝒂𝒕𝒊𝒐𝒏
-- [x] 𝑻𝒐𝒑 𝒕𝒓𝒂𝒏𝒅𝒊𝒏𝒈
-- [x] 𝑨𝒅𝒗𝒂𝒏𝒄𝒆 𝑨𝑰 𝒔𝒑𝒆𝒍𝒍𝒊𝒏𝒈 𝒄𝒉𝒆𝒄𝒌 𝒇𝒆𝒂𝒕𝒖𝒓𝒆
-- [x] 𝑹𝒆𝒒𝒖𝒆𝒔𝒕 𝒕𝒐 𝒋𝒐𝒊𝒏 𝒊𝒏 𝑭𝒔𝒖𝒃 𝒐𝒏𝒍𝒚 ADMINS
-- [x] 𝑽𝒆𝒓𝒊𝒇𝒊𝒆𝒅 𝑼𝒔𝒆𝒓 𝑫𝑩 𝑺𝒂𝒗𝒆
-- [x] 𝑺𝒖𝒑𝒆𝒓 𝑭𝒂𝒔𝒕 𝑼𝒔𝒆𝒓 𝑩𝒓𝒐𝒂𝒅𝒄𝒂𝒔𝒕
-- [x] 𝑹𝒆𝒇𝒆𝒓 & 𝑮𝒆𝒕 𝑷𝒓𝒆𝒎𝒊𝒖𝒎
-- [x] 𝑰𝒏𝒔𝒕𝒂𝒈𝒓𝒂𝒎 𝒗𝒊𝒅𝒆𝒐 𝒅𝒐𝒘𝒏𝒍𝒐𝒂𝒅
-- [x] 𝑻𝒐𝒑 𝑺𝒆𝒂𝒓𝒄𝒉𝒊𝒏𝒈 
-- [x] 𝑩𝒆𝒔𝒕 𝑺𝒕𝒓𝒆𝒂𝒎𝒊𝒏𝒈 𝑾𝒆𝒃𝒔𝒊𝒕𝒆
-- [x] 𝑷𝒓𝒆𝒎𝒊𝒖𝒎 𝒎𝒆𝒎𝒃𝒆𝒓𝒔𝒉𝒊𝒑 𝒎𝒂𝒏𝒂𝒈𝒆𝒎𝒆𝒏𝒕 
-- [x] 𝑆𝑡𝑟𝑒𝑎𝑚 𝑜𝑛𝑙𝑖𝑛𝑒 𝑎𝑛𝑑 𝐹𝑎𝑠𝑡 𝐷𝑜𝑤𝑛𝑙𝑜𝑎𝑑
-- [x] 𝐼𝑛𝑑𝑒𝑥𝑒𝑠 𝐹𝑖𝑙𝑒𝑠 𝑎𝑏𝑜𝑣𝑒 2𝐺𝐵
-- [x] 𝑃𝑟𝑒𝐷𝑉𝐷 𝑎𝑛𝑑 𝐶𝑎𝑚𝑅𝑖𝑝 𝐷𝑒𝑙𝑒𝑡𝑒 𝑀𝑜𝑑𝑒
-- [x] 𝑀𝑢𝑙𝑡𝑖𝑝𝑙𝑒 𝐹𝑖𝑙𝑒 𝐷𝑒𝑙𝑒𝑡𝑖𝑜𝑛
-- [x] 𝑆𝑒𝑡𝑡𝑖𝑛𝑔𝑠 𝑀𝑒𝑛𝑢
-- [x] 𝐹𝑜𝑟𝑐𝑒 𝑆𝑢𝑏𝑠𝑐𝑟𝑖𝑝𝑡𝑖𝑜𝑛
-- [x] 𝑊𝑒𝑙𝑐𝑜𝑚𝑒 𝑀𝑒𝑠𝑠𝑎𝑔𝑒
-- [x] 𝐴𝑢𝑡𝑜𝑚𝑎𝑡𝑖𝑐 𝐹𝑖𝑙𝑒 𝐹𝑖𝑙𝑡𝑒𝑟𝑖𝑛𝑔
-- [x] 𝐷𝑜𝑢𝑏𝑙𝑒 𝐹𝑖𝑙𝑡𝑒𝑟 𝐵𝑢𝑡𝑡𝑜𝑛
-- [x] 𝑆𝑖𝑛𝑔𝑙𝑒 𝐹𝑖𝑙𝑡𝑒𝑟 𝐵𝑢𝑡𝑡𝑜𝑛
-- [x] 𝐵𝑜𝑡 𝑃𝑀 𝐹𝑖𝑙𝑒 𝑆𝑒𝑛𝑑 𝑀𝑜𝑑𝑒
-- [x] 𝐴𝑢𝑡𝑜 𝐹𝑖𝑙𝑒 𝑆𝑒𝑛𝑑
-- [x] 𝐹𝑜𝑟𝑤𝑎𝑟𝑑 𝑅𝑒𝑠𝑡𝑟𝑖𝑐𝑡𝑖𝑜𝑛
-- [x] 𝐹𝑖𝑙𝑒 𝑃𝑟𝑜𝑡𝑒𝑐𝑡
-- [x] 𝐴𝑑𝑚𝑖𝑛 𝐶𝑜𝑚𝑚𝑎𝑛𝑑𝑠
-- [x] 𝐺𝑟𝑜𝑢𝑝 𝐵𝑟𝑜𝑎𝑑𝑐𝑎𝑠𝑡
-- [x] 𝐼𝑛𝑑𝑒𝑥
-- [x] 𝑅𝑎𝑛𝑑𝑜𝑚 𝑝𝑖𝑐𝑠
-- [x] 𝑖𝑑𝑠 𝑎𝑛𝑑 𝑈𝑠𝑒𝑟 𝑖𝑛𝑓𝑜 
-- [x] 𝑆𝑡𝑎𝑡𝑠
-- [x] 𝑈𝑠𝑒𝑟𝑠
-- [x] 𝐶ℎ𝑎𝑡𝑠
-- [x] 𝑈𝑠𝑒𝑟 𝐵𝑎𝑛
-- [x] 𝑈𝑠𝑒𝑟 𝑈𝑛𝑏𝑎𝑛
-- [x] 𝐶ℎ𝑎𝑡 𝐿𝑒𝑎𝑣𝑒
-- [x] 𝐶ℎ𝑎𝑡 𝐷𝑖𝑠𝑎𝑏𝑙𝑒
-- [x] 𝐹𝑖𝑙𝑒 𝑆𝑡𝑜𝑟𝑒
-- [x] 𝐴𝑢𝑡𝑜 𝐷𝑒𝑙𝑒𝑡𝑒
-- [x] 𝐴𝑛𝑑 𝑀𝑜𝑟𝑒...
+### 🎬 Media & Filtering Core
+- ⚡ **Auto File Filtering** – Instant keyword & pattern file lookup across massive databases.
+- ⚡ **Full File Indexing Support** – Unlimited channel indexing, supporting files **above 2GB**.
+- ⚡ **Single Filter Button** – Clean button layouts combining title, resolution, and file size.
+- ⚡ **Bot PM File Send Mode** – Option to deliver files directly in private chat for privacy.
+- ⚡ **Auto File Send** – One-click automated file delivery.
+- ⚡ **PreDVD & CamRip Auto Deletion** – Keeps your database clean from low-quality releases.
+- ⚡ **Auto Delete Old Files** – Configurable timer for automatic file message deletion.
+- ⚡ **Multiple File Deletion** – Bulk purge low-quality or unwanted media entries.
 
-<b>𝑇𝑜 𝑘𝑛𝑜𝑤 𝑎𝑏𝑜𝑢𝑡 𝑎𝑙𝑙 𝑓𝑒𝑎𝑡𝑢𝑟𝑒𝑠, 𝐽𝑜𝑖𝑛 𝑜𝑢𝑟 <a href='https://t.me/dreamxbotz'>𝑢𝑝𝑑𝑎𝑡𝑒𝑠 𝑐ℎ𝑎𝑛𝑛𝑒𝑙</a>.</b>
+### 🌐 Streaming & Multi-Database
+- 📺 **Online Streaming & Fast Download** – Integrated high-speed web stream & direct download links.
+- 🍿 **Best Streaming Website Integration** – Compatible with external web players and web servers.
+- 🎛 **Stream Mode Toggle** – Easily switch streaming availability on or off.
+- 🗄 **Double DB Support** – Dual MongoDB cluster failover for maximum database capacity & zero downtime.
 
-## 𝐶𝑜𝑚𝑚𝑎𝑛𝑑𝑠
-```
-movie_update - update channel notification on off
-pm_search - pm search on off 
-verification - check Total verified users
-top - to searching 
-start - ꜱᴛᴀʀᴛ ᴍᴇ...
-settings - ᴄʜᴀɴɢᴇ ʙᴏᴛ ꜱᴇᴛᴛɪɴɢꜱ...
-plan - ᴄʜᴇᴄᴋ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴍᴇᴍʙᴇʀꜱʜɪᴘ ᴘʟᴀɴꜱ...
-myplan - ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜʀʀᴜɴᴛ ᴘʟᴀɴ...
-stats - ᴄʜᴇᴄᴋ ᴍʏ ᴅᴀᴛᴀʙᴀꜱᴇ...
-info - ɢᴇᴛ ᴜꜱᴇʀ ɪɴꜰᴏ...
-id - ɢᴇᴛ ᴛᴇʟᴇɢʀᴀᴍ ɪᴅ...
-link - ᴄʀᴇᴀᴛᴇ ʟɪɴᴋ ꜰᴏʀ ᴏɴᴇ ᴘᴏꜱᴛ...
-batch - ᴄʀᴇᴀᴛᴇ ʟɪɴᴋ ꜰᴏʀ ʙᴜʟᴋ ᴘᴏꜱᴛꜱ...
-deleteall - ᴅᴇʟᴇᴛᴇ ᴀʟʟ ꜰɪʟᴇꜱ ꜰʀᴏᴍ ᴅʙ...
-delete - ᴅᴇʟᴇᴛᴇ ꜱᴘᴇᴄɪꜰɪᴄ ꜰɪʟᴇ ꜰʀᴏᴍ ᴅʙ...
-deletefiles - ᴅᴇʟᴇᴛᴇ ᴘʀᴇᴅᴠᴅ ᴀɴᴅ ᴄᴀᴍʀɪᴘ ꜰɪʟᴇꜱ...
-broadcast - ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ᴜꜱᴇʀꜱ...
-grp_broadcast - ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴍᴇꜱꜱᴀɢᴇꜱ ᴛᴏ ɢʀᴏᴜᴘꜱ...
-enable - ᴇɴᴀʙʟᴇ ᴛᴏ ᴊᴏɪɴ ɪɴ ɢʀᴏᴜᴘ...
-disable - ᴅɪꜱᴀʙʟᴇ ᴀɴʏ ɢʀᴏᴜᴘ...
-leave - ʟᴇᴀᴠᴇ ꜰʀᴏᴍ ᴀɴʏ ɢʀᴏᴜᴘ...
-ban - ʙᴀɴ ᴜꜱᴇʀ ᴛᴏ ᴜꜱᴇ ʙᴏᴛ...
-unban - ᴜɴʙᴀɴ ᴜꜱᴇʀ ᴛᴏ ᴜꜱᴇ ʙᴏᴛ...
-add_premium - ᴀᴅᴅ ᴀɴʏ ᴜꜱᴇʀ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ...
-remove_premium - ʀᴇᴍᴏᴠᴇ ᴀɴʏ ᴜꜱᴇʀ ꜰʀᴏᴍ ᴘʀᴇᴍɪᴜᴍ...
-premium_users - ɢᴇᴛ ʟɪꜱᴛ ᴏꜰ ᴘʀᴇᴍɪᴜᴍ ᴜꜱᴇʀꜱ...
-restart - ʀᴇꜱᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ...
-```
+### 🧠 Smart AI & Content Enrichment
+- 🤖 **Advanced AI Spelling Correction** – Smart typo correction and movie suggestions.
+- 🎬 **Auto Movie Info Updates** – Rich TMDB metadata, posters, and landscapes automatically attached.
+- 📈 **Trending Titles & Top Searching** – Live analytics highlighting the most searched media.
+- 💬 **PM Search Toggle** – Enable or disable search capabilities in Bot PM.
 
-## Disclaimer
+### 🛡 Verification, Access & Monetization
+- 🔐 **3 User Verification System** – Multi-step shortlink integration for link monetization.
+- 🔐 **Request to Join via Force-Sub** – High conversion channel growth (Admin Only).
+- 📢 **Multi FSub Admin & Group Support** – Enforce multi-channel subscriptions before file access.
+- 💾 **Verified User Database Save** – Persists verification states across sessions.
+- 📊 **Verified User Counter** – Real-time tracking of verified users.
+- 💎 **Premium Membership Management** – Tiered access control and VIP privileges.
+- 🎁 **Refer & Earn Premium** – Built-in referral engine rewarding users with free premium access.
 
-This repository is provided for educational purposes only. It is not intended for personal or commercial gain. Use of this repository and the code within is at your own risk. The authors and contributors are not responsible for any misuse or damage caused by the use of this project.
+### ⚙️ Security, Admin & Management
+- 🔒 **Forward Restriction & File Protection** – Prevent unauthorized file re-forwarding & saving.
+- 📢 **Superfast User Broadcast** – Instant announcements to thousands of bot users concurrently.
+- 👥 **Group Broadcast** – Send updates across all connected group chats.
+- ⚙️ **Settings Menu** – Interactive group & bot control panel.
+- 👋 **Welcome Message** – Custom greeting image & text for new group members.
+- 🆔 **ID & User Info** – Detailed Telegram account lookup tools.
+- 📈 **Stats & Analytics** – Complete database metrics & storage utilization logs.
+- 🔨 **User Ban/Unban & Chat Leave/Disable** – Comprehensive moderation and administrative controls.
 
-## License
+---
 
-This project is licensed under the [MIT License](https://github.com/MrRaazz/DreamxBotz/blob/main/LICENSE)
+## 🛠 Commands Reference
 
-### Jai Shree Krishna  !😉
+| Command | Category | Description |
+| :--- | :--- | :--- |
+| `/start` | User | Start the bot and access main menu |
+| `/settings` | Group | Customize group filter, caption & verification settings |
+| `/plan` | User | View available premium plans & benefits |
+| `/myplan` | User | Check active subscription & expiry details |
+| `/stats` | Admin | Display database metrics and storage usage |
+| `/info` | Utility | Retrieve user profile details & IDs |
+| `/id` | Utility | Get current chat or user Telegram ID |
+| `/movie_update` | Admin | Toggle auto movie update notifications |
+| `/pm_search` | Admin | Enable or disable private message search |
+| `/trendlist` | User | Browse top trending search queries |
+| `/broadcast` | Admin | Broadcast announcement to all registered users |
+| `/grp_broadcast` | Admin | Broadcast message to all connected groups |
+| `/add_premium` | Admin | Grant premium status to a specified user |
+| `/remove_premium` | Admin | Revoke premium status from a specified user |
+| `/premium_users` | Admin | View complete list of active premium users |
+| `/restart` | Admin | Restart bot core process |
+
+---
+
+## 📋 Environment Configuration
+
+| Variable | Required | Default | Description |
+| :--- | :---: | :---: | :--- |
+| `BOT_TOKEN` | **Yes** | `""` | Telegram Bot Token from [@BotFather](https://t.me/BotFather) |
+| `API_ID` | **Yes** | `""` | API ID from [my.telegram.org](https://my.telegram.org) |
+| `API_HASH` | **Yes** | `""` | API Hash from [my.telegram.org](https://my.telegram.org) |
+| `ADMINS` | **Yes** | `""` | Space-separated list of Bot Admin Telegram IDs |
+| `DATABASE_URI` | **Yes** | `""` | Primary MongoDB Connection URI |
+| `DATABASE_NAME` | **Yes** | `"phantombot"` | Primary Database Name |
+| `MULTIPLE_DB` | No | `True` | Enable Dual Database cluster mode |
+| `DATABASE_URI2` | No | `""` | Secondary MongoDB Connection URI |
+| `LOG_CHANNEL` | **Yes** | `""` | Telegram Channel ID for Bot Operation Logs |
+| `BIN_CHANNEL` | **Yes** | `""` | Telegram Channel ID for Storing Indexed Media |
+
+---
+
+## 🤝 Support & Community
+
+For assistance, deployment inquiries, or custom configurations, join the official support group:
+
+<div align="center">
+  <a href="https://t.me/Deendayal_Support_Group">
+    <img src="https://img.shields.io/badge/Join-Deendayal%20Support%20Group-0088cc?style=for-the-badge&logo=telegram" alt="Support Group">
+  </a>
+</div>
+
+---
+
+<div align="center">
+
+  ### 🙏 Acknowledgements & Credits
+  Special thanks to all contributors and open-source project maintainers:
+  
+  [ Anonymous ](https://t.me/BeingXAnonymous) • [ Zishan ](https://t.me/IM_JISSHU) • [ Bharath ](https://t.me/Bharath_boy) • [ Harshal Edits ](https://github.com/HarshalPurohitEdits)
+
+  ---
+
+  <sub><b>Disclaimer:</b> This project is built for educational and demonstration purposes. Please ensure compliance with Telegram Terms of Service and applicable platform guidelines.</sub>
+
+  <p><b>Jai Shree Krishna 🙏😉</b></p>
+</div>

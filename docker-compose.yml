@@ -1,14 +1,20 @@
-version: "3.8"
 services:
-   worker:
+  bot:
     build: .
+    env_file:
+      - path: .env
+        required: false
     environment:
-      BOT_TOKEN: $BOT_TOKEN
-      API_ID: $API_ID
-      API_HASH: $API_HASH
-      CHANNELS: $CHANNELS
-      ADMINS: $ADMINS
-      LOG_CHANNEL: $LOG_CHANNEL
-      DATABASE_NAME: $DATABASE_NAME
-      DATABASE_URI: $DATABASE_URI
-      HEROKU_API_KEY: $HEROKU_API_KEY
+      - BOT_TOKEN
+      - API_ID
+      - API_HASH
+      - CHANNELS
+      - ADMINS
+      - LOG_CHANNEL
+      - DATABASE_NAME
+      - DATABASE_URI
+      - HEROKU_API_KEY
+      - PORT
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    restart: unless-stopped

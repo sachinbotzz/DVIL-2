@@ -1,8 +1,7 @@
 #Thanks @dreamxbotz for helping in this journey 
-import math
 import asyncio
 import logging
-from info import *
+from info import BIN_CHANNEL
 from typing import Dict, Union
 from dreamxbotz.Bot import work_loads
 from pyrogram import Client, utils, raw
@@ -50,7 +49,7 @@ class ByteStreamer:
         Generates the properties of a media file on a specific message.
         returns ths properties in a FIleId class.
         """
-        file_id = await get_file_ids(self.client, LOG_CHANNEL, id)
+        file_id = await get_file_ids(self.client, BIN_CHANNEL, id)
         logging.debug(f"Generated file ID and Unique ID for message with ID {id}")
         if not file_id:
             logging.debug(f"Message with ID {id} not found")
@@ -141,8 +140,7 @@ class ByteStreamer:
 
             location = raw.types.InputPeerPhotoFileLocation(
                 peer=peer,
-                volume_id=file_id.volume_id,
-                local_id=file_id.local_id,
+                photo_id=file_id.media_id,
                 big=file_id.thumbnail_source == ThumbnailSource.CHAT_PHOTO_BIG,
             )
         elif file_type == FileType.PHOTO:

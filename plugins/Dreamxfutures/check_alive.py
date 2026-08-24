@@ -2,7 +2,6 @@ import time
 import asyncio
 from pyrogram import Client, filters
 import platform
-import os
 import shutil
 import logging
 from pyrogram.types import BotCommand
@@ -13,10 +12,10 @@ logging.basicConfig(level=logging.INFO)
 
 @Client.on_message(filters.command(["stickerid"]))
 async def stickerid(bot, message):   
-    if message.reply_to_message.sticker:
+    if message.reply_to_message and message.reply_to_message.sticker:
        await message.reply(f"**Sticker ID is**  \n `{message.reply_to_message.sticker.file_id}` \n \n ** Unique ID is ** \n\n`{message.reply_to_message.sticker.file_unique_id}`", quote=True)
     else: 
-       await message.reply("Oops !! Not a sticker file")
+       await message.reply("Oops !! Please reply to a sticker file.")
 
 CMD = ["/", "."]  
 
@@ -73,7 +72,6 @@ def get_system_info():
         with open('/proc/meminfo') as f:
             meminfo = f.readlines()
         total_ram = get_size(meminfo[0].split()[1])  
-        available_ram = get_size(meminfo[2].split()[1])  
         used_ram = get_size(int(meminfo[0].split()[1]) - int(meminfo[2].split()[1]))
     except Exception:
         total_ram, used_ram = "Unavailable", "Unavailable"

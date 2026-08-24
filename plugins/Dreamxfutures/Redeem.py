@@ -17,7 +17,6 @@ def generate_code(length=10):
 
 @Client.on_message(filters.command("add_redeem") & filters.user(ADMINS))
 async def add_redeem_code(client, message):
-    user_id = message.from_user.id
     if len(message.command) == 3:
         try:
             time = message.command[1]

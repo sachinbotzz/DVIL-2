@@ -1,17 +1,19 @@
+import logging
+import asyncio
+import psutil
+from time import time
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyrogram.errors.exceptions.bad_request_400 import MessageTooLong, PeerIdInvalid
-from info import ADMINS,MULTIPLE_DB, LOG_CHANNEL, OWNER_LNK, MELCOW_PHOTO
-from database.users_chats_db import db, db2
-from database.ia_filterdb import Media, Media2, db as db_stats, db2 as db2_stats
+from pyrogram.errors import ChatAdminRequired
+from info import ADMINS, MULTIPLE_DB, LOG_CHANNEL, OWNER_LNK, MELCOW_PHOTO
+from database.users_chats_db import db
+from database.ia_filterdb import Media, Media2, db as db_stats, db2 as db2_stats, client, client2
 from utils import get_size, temp, get_settings, get_readable_time
 from Script import script
-from pyrogram.errors import ChatAdminRequired
-import asyncio
-import psutil
-import logging
-from time import time
 from bot import botStartTime
+
+logger = logging.getLogger(__name__)
 
 """-----------------------------------------https://t.me/dreamxbotz--------------------------------------"""
 
@@ -28,10 +30,10 @@ async def save_group(bot, message):
 
             buttons = [[InlineKeyboardButton('📌 ᴄᴏɴᴛᴀᴄᴛ ꜱᴜᴘᴘᴏʀᴛ 📌', url=OWNER_LNK)]]
             reply_markup=InlineKeyboardMarkup(buttons)
-            k = await message.reply(text='<b>ᴄʜᴀᴛ ɴᴏᴛ ᴀʟʟᴏᴡᴇᴅ 🐞\n\nᴍʏ ᴀᴅᴍɪɴꜱ ʜᴀꜱ ʀᴇꜱᴛʀɪᴄᴛᴇᴅ ᴍᴇ ꜰʀᴏᴍ ᴡᴏʀᴋɪɴɢ ʜᴇʀᴇ ! ɪꜰ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴋɴᴏᴡ ᴍᴏʀᴇ ᴀʙᴏᴜᴛ ɪᴛ ᴄᴏɴᴛᴀᴄᴛ ꜱᴜᴘᴘᴏʀᴛ.</b>',reply_markup=reply_markup,)
+            k = await message.reply(text=script.CHAT_RESTRICTED_TXT, reply_markup=reply_markup)
             try:
                 await k.pin()
-            except:
+            except Exception:
                 pass
             await bot.leave_chat(message.chat.id)
             return
@@ -40,10 +42,10 @@ async def save_group(bot, message):
                   ]]
         reply_markup=InlineKeyboardMarkup(buttons)
         await message.reply_text(
-            text=f"<b>Thankyou For Adding Me In {message.chat.title} ❣️\n\nIf you have any questions & doubts about using me contact support.</b>",
+            text=script.BOT_ADD_TXT.format(message.chat.title),
             reply_markup=reply_markup)
         try:
-            await db.connect_group(message.chat.id, message.from_user)
+            await db.connect_group(message.chat.id, message.from_user.id)
         except Exception as e:
             logging.error(f"DB error connecting group: {e}")
     else:
@@ -54,7 +56,7 @@ async def save_group(bot, message):
                 if temp.MELCOW.get('welcome'):
                     try:
                         await temp.MELCOW['welcome'].delete()
-                    except:
+                    except Exception:
                         pass
                 try:
                     temp.MELCOW['welcome'] = await message.reply_photo(
@@ -65,14 +67,14 @@ async def save_group(bot, message):
                                     InlineKeyboardButton("📌 ᴄᴏɴᴛᴀᴄᴛ ꜱᴜᴘᴘᴏʀᴛ 📌", url=OWNER_LNK)
                                 ]]),parse_mode=enums.ParseMode.HTML)
                 except Exception as e:
-                    print(f"Welcome photo send failed: {e}")
+                    logger.error("Welcome photo send failed: %s", e)
         if settings.get("auto_delete"):
             await asyncio.sleep(600)
             try:
                 if temp.MELCOW.get('welcome'):
                     await temp.MELCOW['welcome'].delete()
                     temp.MELCOW['welcome'] = None 
-            except:
+            except Exception:
                 pass
                
 @Client.on_message(filters.command('leave') & filters.user(ADMINS))
@@ -82,7 +84,7 @@ async def leave_a_chat(bot, message):
     chat = message.command[1]
     try:
         chat = int(chat)
-    except:
+    except Exception:
         chat = chat
     try:
         buttons = [[
@@ -91,7 +93,7 @@ async def leave_a_chat(bot, message):
         reply_markup=InlineKeyboardMarkup(buttons)
         await bot.send_message(
             chat_id=chat,
-            text='<b>ʜᴇʟʟᴏ ꜰʀɪᴇɴᴅꜱ, \nᴍʏ ᴀᴅᴍɪɴ ʜᴀꜱ ᴛᴏʟᴅ ᴍᴇ ᴛᴏ ʟᴇᴀᴠᴇ ꜰʀᴏᴍ ɢʀᴏᴜᴘ, ꜱᴏ ɪ ʜᴀᴠᴇ ᴛᴏ ɢᴏ ! \nɪꜰ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴀᴅᴅ ᴍᴇ ᴀɢᴀɪɴ ᴄᴏɴᴛᴀᴄᴛ ꜱᴜᴘᴘᴏʀᴛ.</b>',
+            text=script.LEAVE_CHAT_TXT,
             reply_markup=reply_markup,
         )
 
@@ -113,7 +115,7 @@ async def disable_chat(bot, message):
         reason = "No reason Provided"
     try:
         chat_ = int(chat)
-    except:
+    except Exception:
         return await message.reply('Give Me A Valid Chat ID')
     cha_t = await db.get_chat(int(chat_))
     if not cha_t:
@@ -130,7 +132,7 @@ async def disable_chat(bot, message):
         reply_markup=InlineKeyboardMarkup(buttons)
         await bot.send_message(
             chat_id=chat_, 
-            text=f'<b>ʜᴇʟʟᴏ ꜰʀɪᴇɴᴅꜱ, \nᴍʏ ᴀᴅᴍɪɴ ʜᴀꜱ ᴛᴏʟᴅ ᴍᴇ ᴛᴏ ʟᴇᴀᴠᴇ ꜰʀᴏᴍ ɢʀᴏᴜᴘ, ꜱᴏ ɪ ʜᴀᴠᴇ ᴛᴏ ɢᴏ ! \nɪꜰ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴀᴅᴅ ᴍᴇ ᴀɢᴀɪɴ ᴄᴏɴᴛᴀᴄᴛ ꜱᴜᴘᴘᴏʀᴛ..</b> \nReason : <code>{reason}</code>',
+            text=script.LEAVE_CHAT_TXT + f"\nReason : <code>{reason}</code>",
             reply_markup=reply_markup)
         await bot.leave_chat(chat_)
     except Exception as e:
@@ -144,7 +146,7 @@ async def re_enable_chat(bot, message):
     chat = message.command[1]
     try:
         chat_ = int(chat)
-    except:
+    except Exception:
         return await message.reply('Give Me A Valid Chat ID')
     sts = await db.get_chat(int(chat))
     if not sts:
@@ -165,26 +167,54 @@ async def get_stats(bot, message):
         premium = await db.all_premium_users()
         file1 = await Media.count_documents()
         DB_SIZE = 512 * 1024 * 1024
+        
+        # Calculate size for Current Primary DB
         dbstats = await db_stats.command("dbStats")
-        db_size = dbstats['dataSize'] + dbstats['indexSize']
+        current_db_size = dbstats['storageSize'] + dbstats['indexSize']
+
+        # Calculate total size for Primary DB Cluster
+        dbs = await client.list_database_names()
+        db_size = 0
+        for db_name in dbs:
+            if db_name in ["admin", "local"]:
+                continue
+            stats = await client[db_name].command("dbStats")
+            db_size += stats['storageSize'] + stats['indexSize']
+            
         free = DB_SIZE - db_size
         uptime = get_readable_time(time() - botStartTime)
         ram = psutil.virtual_memory().percent
         cpu = psutil.cpu_percent()
-        if MULTIPLE_DB == False:
+        
+        if not MULTIPLE_DB:
             await msg.edit(script.STATUS_TXT.format(
-                total_users, totl_chats, premium, file1, get_size(db_size), get_size(free), uptime, ram, cpu))                                               
+                total_users, totl_chats, premium, file1, get_size(current_db_size), get_size(db_size), get_size(free), uptime, ram, cpu))                                               
             return
+            
         file2 = await Media2.count_documents()
+        
+        # Calculate size for Current Secondary DB
         db2stats = await db2_stats.command("dbStats")
-        db2_size = db2stats['dataSize'] + db2stats['indexSize']
+        current_db2_size = db2stats['storageSize'] + db2stats['indexSize']
+
+        # Calculate total size for Secondary DB Cluster
+        dbs2 = await client2.list_database_names()
+        db2_size = 0
+        for db_name in dbs2:
+            if db_name in ["admin", "local"]:
+                continue
+            stats = await client2[db_name].command("dbStats")
+            db2_size += stats['storageSize'] + stats['indexSize']
+            
         free2 = DB_SIZE - db2_size
+        
         await msg.edit(script.MULTI_STATUS_TXT.format(
-            total_users, totl_chats, premium, file1, get_size(db_size), get_size(free),
-            file2, get_size(db2_size), get_size(free2), uptime, ram, cpu, (int(file1) + int(file2))
+            total_users, totl_chats, premium, file1, get_size(current_db_size), get_size(db_size), get_size(free),
+            file2, get_size(current_db2_size), get_size(db2_size), get_size(free2), 
+            uptime, ram, cpu, (int(file1) + int(file2))
             ))
     except Exception as e:
-       print(f"Error In stats :- {e}")        
+       logger.error("Error In stats: %s", e)        
 
 @Client.on_message(filters.command('invite') & filters.user(ADMINS))
 async def gen_invite(bot, message):
@@ -193,7 +223,7 @@ async def gen_invite(bot, message):
     chat = message.command[1]
     try:
         chat = int(chat)
-    except:
+    except Exception:
         return await message.reply('Give Me A Valid Chat ID')
     try:
         link = await bot.create_chat_invite_link(chat)
@@ -216,7 +246,7 @@ async def ban_a_user(bot, message):
         reason = "No reason Provided"
     try:
         chat = int(chat)
-    except:
+    except Exception:
         pass
     try:
         k = await bot.get_users(chat)
@@ -227,6 +257,8 @@ async def ban_a_user(bot, message):
     except Exception as e:
         return await message.reply(f'Error - {e}')
     else:
+        if str(k.id) in {str(admin) for admin in ADMINS}:
+            return await message.reply(f"Nice try 😏 {k.mention} is my admin. Boss ko ban nahi kar sakta!")
         jar = await db.get_ban_status(k.id)
         if jar['is_banned']:
             return await message.reply(f"{k.mention} is already banned\nReason: {jar['ban_reason']}")
@@ -240,16 +272,10 @@ async def ban_a_user(bot, message):
 async def unban_a_user(bot, message):
     if len(message.command) == 1:
         return await message.reply('Give me a user id / username')
-    r = message.text.split(None)
-    if len(r) > 2:
-        reason = message.text.split(None, 2)[2]
-        chat = message.text.split(None, 2)[1]
-    else:
-        chat = message.command[1]
-        reason = "No reason Provided"
+    chat = message.command[1]
     try:
         chat = int(chat)
-    except:
+    except Exception:
         pass
     try:
         k = await bot.get_users(chat)
@@ -306,13 +332,9 @@ async def list_chats(bot, message):
 
 @Client.on_message(filters.command('group_cmd'))
 async def group_commands(client, message):
-    user = message.from_user.mention
-    user_id = message.from_user.id
     await message.reply_text(script.GROUP_CMD, disable_web_page_preview=True)
 
 @Client.on_message(filters.command('admin_cmd') & filters.user(ADMINS))
 async def admin_commands(client, message):
-    user = message.from_user.mention
-    user_id = message.from_user.id
     await message.reply_text(script.ADMIN_CMD, disable_web_page_preview=True)
     

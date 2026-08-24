@@ -17,26 +17,35 @@ class Database:
         self.misc = self.db.misc
         self.verify_id = self.db.verify_id 
         self.codes = self.db.codes
-        self.filename_col = self.db.filename  # notification filename
+        self.filename_col = self.db.filename
+        self.movie_updates = self.db.movie_updates
         self.connection = self.db.connections
 
     async def add_name(self, filename):
-        if await self.filename_col.find_one({'_id': filename}):
+        if await self.movie_updates.find_one({'_id': filename}):
             return False
-        await self.filename_col.insert_one({'_id': filename})
+        await self.movie_updates.insert_one({'_id': filename})
         return True
 
     async def delete_all_msg(self):
-        await self.filename_col.delete_many({})
+        await self.movie_updates.delete_many({})
         print("All filenames notification have been deleted.")
         return True
-
  
-    async def find_join_req(self, id):
-        return bool(await self.req.find_one({'id': id})) 
      
-    async def add_join_req(self, id):
-        await self.req.insert_one({'id': id})
+    async def add_join_req(self, user_id: int, channel_id: int): #update
+        await self.req.update_one(
+            {'user_id': user_id},
+            {
+                '$addToSet': {'channels': channel_id},
+                '$setOnInsert': {'created_at': datetime.datetime.utcnow()}
+            },
+            upsert=True
+        )
+        
+    async def has_joined_channel(self, user_id: int, channel_id: int):
+        doc = await self.req.find_one({'user_id': user_id})
+        return doc and 'channels' in doc and channel_id in doc['channels']
 
     async def del_join_req(self):
         await self.req.drop()
@@ -157,7 +166,7 @@ class Database:
             'verify_time': TWO_VERIFY_GAP,
             'third_verify_time': THREE_VERIFY_GAP,
             'caption': CUSTOM_FILE_CAPTION,
-            'fsub': AUTH_CHANNELS
+            'fsub': AUTH_CHANNELS,
         }
         chat = await self.grp.find_one({'id':int(id)})
         if chat and 'settings' in chat:
@@ -168,14 +177,13 @@ class Database:
     async def dreamx_reset_settings(self):
         try:
             result = await self.grp.update_many(
-                {'settings': {'$exists': True}},
-                {'$unset': {'settings': ''}}
+                {'settings': {'$exists': True}}, 
+                {'$unset': {'settings': ""}}    
             )
-            modified_count = result.modified_count
-            return modified_count
+            return result.modified_count
         except Exception as e:
-            print(f"Error deleting settings for all groups: {str(e)}")
-            raise
+            print(f"[ERROR] Failed to reset group settings: {e}")
+            raise  
 
     async def disable_chat(self, chat, reason="No Reason"):
         chat_status=dict(
@@ -304,7 +312,7 @@ class Database:
         myquery = {"user_id": user_id, "hash": hash}
         newvalues = { "$set": value }
         return await self.verify_id.update_one(myquery, newvalues)
-        
+
     async def has_premium_access(self, user_id):
         user_data = await self.get_user(user_id)
         if user_data:
@@ -316,8 +324,48 @@ class Database:
             else:
                 await self.users.update_one({"id": user_id}, {"$set": {"expiry_time": None}})
         return False
-        
-    
+
+    async def check_daily_limit(self, user_id):
+        user_id = int(user_id)
+        if await self.has_premium_access(user_id):
+            return True
+        user = await self.users.find_one({"id": user_id})
+        if not user:
+            user = await self.users.find_one({"id": str(user_id)})
+        if not user:
+            return True
+
+        now = datetime.datetime.utcnow()
+        last_date = user.get("last_download_date")
+        if last_date:
+            if isinstance(last_date, datetime.datetime):
+                if last_date.tzinfo is not None:
+                    last_date = last_date.replace(tzinfo=None)
+                if (now - last_date).total_seconds() >= 86400:
+                    await self.users.update_one({"id": user_id}, {"$set": {"daily_downloads": 0, "last_download_date": now}})
+                    return True
+            else:
+                try:
+                    if str(last_date)[:10] != now.strftime("%Y-%m-%d"):
+                        await self.users.update_one({"id": user_id}, {"$set": {"daily_downloads": 0, "last_download_date": now}})
+                        return True
+                except Exception:
+                    pass
+
+        daily_downloads = user.get("daily_downloads", 0)
+        return daily_downloads < DAILY_DOWNLOAD_LIMIT
+
+    async def increase_daily_download(self, user_id):
+        user_id = int(user_id)
+        now = datetime.datetime.utcnow()
+        await self.users.update_one(
+            {"id": user_id},
+            {
+                "$inc": {"daily_downloads": 1},
+                "$set": {"last_download_date": now}
+            },
+            upsert=True
+        )
 
     async def update_one(self, filter_query, update_data):
         try:
@@ -339,6 +387,26 @@ class Database:
             {"id": user_id}, {"$set": {"expiry_time": None}}
         )
 
+    async def get_premium_trial(self, user_id):
+        user_id = int(user_id)
+        user_data = await self.get_user(user_id)
+        if not user_data:
+            return PREMIUM_TRIAL_COUNT
+        return user_data.get("premium_trial_remaining", PREMIUM_TRIAL_COUNT)
+
+    async def reduce_premium_trial(self, user_id):
+        user_id = int(user_id)
+        current = await self.get_premium_trial(user_id)
+        if current > 0:
+            new_count = current - 1
+            await self.users.update_one(
+                {"id": user_id},
+                {"$set": {"premium_trial_remaining": new_count}},
+                upsert=True
+            )
+            return new_count
+        return 0
+
     async def check_trial_status(self, user_id):
         user_data = await self.get_user(user_id)
         if user_data:
@@ -352,6 +420,16 @@ class Database:
         user_data = {"id": user_id, "expiry_time": expiry_time, "has_free_trial": True}
         await self.users.update_one({"id": user_id}, {"$set": user_data}, upsert=True)
 
+    async def reset_free_trial(self, user_id=None):
+        if user_id is None:
+            update_data = {"$set": {"has_free_trial": False}}
+            result = await self.users.update_many({}, update_data)  
+            return result.modified_count
+        else:
+            update_data = {"$set": {"has_free_trial": False}}
+            result = await self.users.update_one({"id": user_id}, update_data)
+            return 1 if result.modified_count > 0 else 0  
+        
     async def all_premium_users(self):
         count = await self.users.count_documents({
         "expiry_time": {"$gt": datetime.datetime.now()}
@@ -402,8 +480,12 @@ class Database:
     async def update_movie_update_status(self, bot_id, enable):
         await self.update_bot_setting(bot_id, 'MOVIE_UPDATE_NOTIFICATION', enable)
 
-        
+    async def maintenance_status(self, bot_id):
+        return await self.get_bot_setting(bot_id, 'MAINTENANCE', MAINTENANCE)
+
+    async def update_maintenance_status(self, bot_id, enable):
+        await self.update_bot_setting(bot_id, 'MAINTENANCE', enable)
+     
 db = Database(DATABASE_URI, DATABASE_NAME)    
 db2 = Database(DATABASE_URI2, DATABASE_NAME)
-
 

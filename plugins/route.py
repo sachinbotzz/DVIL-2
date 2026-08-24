@@ -3,27 +3,27 @@ import re
 import math
 import logging
 import secrets
-import time
 import mimetypes
 from aiohttp.http_exceptions import BadStatusLine
-from dreamxbotz.Bot import multi_clients, work_loads, dreamxbotz
+from dreamxbotz.Bot import multi_clients, work_loads
 from dreamxbotz.server.exceptions import FIleNotFound, InvalidHash
-from dreamxbotz.zzint import StartTime, __version__
 from dreamxbotz.util.custom_dl import ByteStreamer
-from dreamxbotz.util.time_format import get_readable_time
 from dreamxbotz.util.render_template import render_page
-from info import *
+import info
 
 
 routes = web.RouteTableDef()
+
+@routes.get("/favicon.ico")
+async def favicon_route_handler(request):
+    return web.FileResponse('dreamxbotz/template/favicon.ico')
 
 @routes.get("/", allow_head=True)
 async def root_route_handler(request):
     return web.json_response("dreamxbotz")
 
-
 @routes.get(r"/watch/{path:\S+}", allow_head=True)
-async def stream_handler(request: web.Request):
+async def watch_handler(request: web.Request):
     try:
         path = request.match_info["path"]
         match = re.search(r"^([a-zA-Z0-9_-]{6})(\d+)$", path)
@@ -53,13 +53,21 @@ async def stream_handler(request: web.Request):
             secure_hash = match.group(1)
             id = int(match.group(2))
         else:
-            id = int(re.search(r"(\d+)(?:\/\S+)?", path).group(1))
+            # Try to extract ID from path
+            id_match = re.search(r"(\d+)(?:\/\S+)?", path)
+            if not id_match:
+                # Path doesn't contain any numeric ID - return 404
+                raise web.HTTPNotFound(text="Not found")
+            id = int(id_match.group(1))
             secure_hash = request.rel_url.query.get("hash")
+        
         return await media_streamer(request, id, secure_hash)
     except InvalidHash as e:
         raise web.HTTPForbidden(text=e.message)
     except FIleNotFound as e:
         raise web.HTTPNotFound(text=e.message)
+    except web.HTTPNotFound:
+        raise  # Re-raise HTTPNotFound without logging
     except (AttributeError, BadStatusLine, ConnectionResetError):
         pass
     except Exception as e:
@@ -74,7 +82,7 @@ async def media_streamer(request: web.Request, id: int, secure_hash: str):
     index = min(work_loads, key=work_loads.get)
     faster_client = multi_clients[index]
     
-    if MULTI_CLIENT:
+    if info.MULTI_CLIENT:
         logging.info(f"Client {index} is now serving {request.remote}")
 
     if faster_client in class_cache:
@@ -84,9 +92,7 @@ async def media_streamer(request: web.Request, id: int, secure_hash: str):
         logging.debug(f"Creating new ByteStreamer object for client {index}")
         tg_connect = ByteStreamer(faster_client)
         class_cache[faster_client] = tg_connect
-    logging.debug("before calling get_file_properties")
     file_id = await tg_connect.get_file_properties(id)
-    logging.debug("after calling get_file_properties")
     
     if file_id.unique_id[:6] != secure_hash:
         logging.debug(f"Invalid hash for message with ID {id}")
@@ -124,7 +130,6 @@ async def media_streamer(request: web.Request, id: int, secure_hash: str):
 
     mime_type = file_id.mime_type
     file_name = file_id.file_name
-    disposition = "attachment"
 
     if mime_type:
         if not file_name:
@@ -146,7 +151,12 @@ async def media_streamer(request: web.Request, id: int, secure_hash: str):
             "Content-Type": f"{mime_type}",
             "Content-Range": f"bytes {from_bytes}-{until_bytes}/{file_size}",
             "Content-Length": str(req_length),
-            "Content-Disposition": f'{disposition}; filename="{file_name}"',
+            "Content-Disposition": f'inline; filename="{file_name}"',  # inline for streaming
             "Accept-Ranges": "bytes",
+            # CORS headers for JSMKV
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Type",
+            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
         },
     )
