@@ -14,58 +14,77 @@ from utils import temp
 from plugins import channel as channel_plugin
 
 
+def _episode_parts(episode):
+    text = str(episode).strip()
+    if "-" in text:
+        first, last = text.split("-", 1)
+        return first.strip(), last.strip()
+    return text, None
+
+
+def _episode_number(value):
+    try:
+        return int(str(value).strip().lstrip("E").lstrip("e"))
+    except (TypeError, ValueError):
+        return None
+
+
 def _episode_sort_key(item):
     season, episode = item
+    first, _ = _episode_parts(episode)
+    number = _episode_number(first)
     try:
-        return int(season), int(str(episode).split("-", 1)[0])
+        season_number = int(season)
     except (TypeError, ValueError):
-        return int(season or 0), 999999
+        season_number = 0
+    return season_number, number if number is not None else 999999
 
 
 def _episode_label(season, episode, multiple_seasons):
-    text = str(episode).strip()
-    if "-" in text:
-        parts = text.split("-", 1)
-        try:
-            text = f"E{int(parts[0]):02d}-E{int(parts[1]):02d}"
-        except (ValueError, TypeError):
-            text = f"E{text}"
+    first, last = _episode_parts(episode)
+    first_num = _episode_number(first)
+    last_num = _episode_number(last) if last is not None else None
+
+    if first_num is not None:
+        if last_num is not None:
+            text = f"E{first_num:02d}-E{last_num:02d}"
+        else:
+            text = f"E{first_num:02d}"
     else:
-        try:
-            text = f"E{int(text):02d}"
-        except (ValueError, TypeError):
-            text = f"E{text}"
+        text = f"E{episode}"
 
     if multiple_seasons:
         try:
-            return f"S{int(season):02d}{text}"
+            return f"S{int(season):02d} {text}"
         except (ValueError, TypeError):
-            return f"S{season}{text}"
+            return f"S{season} {text}"
     return text
 
 
 def _episode_query(base_name, season, episode, multiple_seasons):
-    # The existing /start getfile route converts '-' to spaces before calling
-    # auto_filter. Keep the query simple so it works with the current search.
+    # Preserve combined ranges such as E01-E17 instead of reducing them to E01.
     title = re.sub(r"\s+", " ", str(base_name).strip()).replace(" ", "-")
+    first, last = _episode_parts(episode)
+    first_num = _episode_number(first)
+    last_num = _episode_number(last) if last is not None else None
+
+    if first_num is not None:
+        if last_num is not None:
+            ep_marker = f"E{first_num:02d}-E{last_num:02d}"
+        else:
+            ep_marker = f"E{first_num:02d}"
+    else:
+        ep_marker = f"E{episode}"
+
     if multiple_seasons:
         try:
-            marker = f"S{int(season):02d}E{int(str(episode).split('-', 1)[0]):02d}"
+            season_marker = f"S{int(season):02d}"
         except (ValueError, TypeError):
-            marker = f"S{season}E{episode}"
+            season_marker = f"S{season}"
+        marker = f"{season_marker}{ep_marker}"
     else:
-        ep_text = str(episode).strip()
-        if "-" in ep_text:
-            parts = ep_text.split("-", 1)
-            try:
-                marker = f"E{int(parts[0]):02d}-{int(parts[1]):02d}"
-            except (ValueError, TypeError):
-                marker = f"E{ep_text}"
-        else:
-            try:
-                marker = f"E{int(ep_text):02d}"
-            except (ValueError, TypeError):
-                marker = f"E{ep_text}"
+        marker = ep_marker
+
     return f"https://t.me/{temp.U_NAME}?start=getfile-{title}-{marker}"
 
 
@@ -81,8 +100,6 @@ def build_series_episode_buttons(movie_doc, base_name):
         episodes.add((season, str(episode).strip()))
 
     if not episodes:
-        # Fall back to the original movie builder when no episode metadata is
-        # available. This keeps old documents fully compatible.
         return channel_plugin._original_build_movie_update_buttons(movie_doc, base_name)
 
     seasons = {season for season, _ in episodes}
@@ -117,7 +134,6 @@ def build_series_episode_buttons(movie_doc, base_name):
     return InlineKeyboardMarkup(rows)
 
 
-# Keep a reference to the original implementation before replacing it.
 if not hasattr(channel_plugin, "_original_build_movie_update_buttons"):
     channel_plugin._original_build_movie_update_buttons = channel_plugin.build_movie_update_buttons
     channel_plugin.build_movie_update_buttons = build_series_episode_buttons
