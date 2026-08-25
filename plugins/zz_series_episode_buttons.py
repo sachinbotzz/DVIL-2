@@ -3,6 +3,9 @@
 This plugin patches the existing channel button builder without changing
 movie button behavior. Episode buttons use the bot's existing `getfile-...`
 start route, so the normal search/verification/download flow is preserved.
+
+It also uses TMDB's media type as a safe fallback for series classification
+when a filename does not contain an explicit SxxExx token.
 """
 
 import re
@@ -12,6 +15,65 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from info import GRP_LNK
 from utils import temp
 from plugins import channel as channel_plugin
+from plugins.Dreamxfutures.Imdbposter import get_movie_detailsx
+
+
+# Cache title -> whether TMDB identifies it as a TV series. This avoids
+# repeated API calls when several files for the same series arrive together.
+_series_type_cache = {}
+
+
+async def _ensure_series_metadata(base_name):
+    """Mark a movie_update document as a series when TMDB says it is TV.
+
+    Filename-based SxxExx detection remains the primary source of episode
+    metadata. TMDB is only used to classify the title as TV when that metadata
+    is missing from the filename.
+    """
+    movie_doc = await channel_plugin.db.movie_updates.find_one({"_id": base_name})
+    if not movie_doc:
+        return
+
+    if movie_doc.get("tag") == "#SERIES" or any(
+        f.get("tag") == "#SERIES" for f in movie_doc.get("files", [])
+    ):
+        return
+
+    cached = _series_type_cache.get(base_name)
+    if cached is None:
+        try:
+            details = await get_movie_detailsx(base_name)
+            kind = str((details or {}).get("media_type") or (details or {}).get("kind") or "").lower()
+            cached = kind in {"tv", "series", "tv series", "tvseries"}
+        except Exception:
+            cached = False
+        _series_type_cache[base_name] = cached
+
+    if not cached:
+        return
+
+    # Keep existing episode metadata untouched; only correct the type.
+    await channel_plugin.db.movie_updates.update_one(
+        {"_id": base_name},
+        {
+            "$set": {"tag": "#SERIES"},
+            "$setOnInsert": {},
+        },
+    )
+    await channel_plugin.db.movie_updates.update_one(
+        {"_id": base_name},
+        {"$set": {"files.$[].tag": "#SERIES"}},
+    )
+
+
+async def _episode_aware_send_movie_update(bot, base_name):
+    await _ensure_series_metadata(base_name)
+    return await channel_plugin._original_send_movie_update(bot, base_name)
+
+
+async def _episode_aware_update_movie_message(bot, base_name):
+    await _ensure_series_metadata(base_name)
+    return await channel_plugin._original_update_movie_message(bot, base_name)
 
 
 def _episode_parts(episode):
@@ -100,6 +162,8 @@ def build_series_episode_buttons(movie_doc, base_name):
         episodes.add((season, str(episode).strip()))
 
     if not episodes:
+        # No episode metadata means we cannot safely invent E01/E02/etc.
+        # Preserve the existing quality-button behavior for that case.
         return channel_plugin._original_build_movie_update_buttons(movie_doc, base_name)
 
     seasons = {season for season, _ in episodes}
@@ -134,6 +198,15 @@ def build_series_episode_buttons(movie_doc, base_name):
     return InlineKeyboardMarkup(rows)
 
 
+# Keep the original implementations before replacing them.
 if not hasattr(channel_plugin, "_original_build_movie_update_buttons"):
     channel_plugin._original_build_movie_update_buttons = channel_plugin.build_movie_update_buttons
     channel_plugin.build_movie_update_buttons = build_series_episode_buttons
+
+if not hasattr(channel_plugin, "_original_send_movie_update"):
+    channel_plugin._original_send_movie_update = channel_plugin.send_movie_update
+    channel_plugin.send_movie_update = _episode_aware_send_movie_update
+
+if not hasattr(channel_plugin, "_original_update_movie_message"):
+    channel_plugin._original_update_movie_message = channel_plugin.update_movie_message
+    channel_plugin.update_movie_message = _episode_aware_update_movie_message
