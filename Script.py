@@ -328,7 +328,6 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 
 <b>🎞️ RATING : {rating}</b>
 <b>⏱️ DURATION : {runtime}</b>
-
 <blockquote><b>⚡ Powered by - <a href="https://t.me/MovieHuntZone">Movie Hunt Zone</a></b></blockquote>
 
 <b>🕒 {date}</b>
