@@ -17,7 +17,8 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s ",
     force=True
 )
-from utils import apply_movie_hunt_branding, is_movie_file
+pyro_log = logging.getLogger("pyrogram")
+pyro_log.setLevel(logging.WARNING)
 
 log = logging.getLogger(__name__)
 
@@ -67,27 +68,6 @@ async def custom_send_cached_media(
             parse_mode=parse_mode
         )
         
-        temp_branded_path = None
-        temp_downloaded_path = None
-        try:
-            if is_movie_file(caption=caption):
-                target_cover = cover
-                if target_cover is None:
-                    try:
-                        target_cover = await self.download_media(file_id)
-                        if target_cover and os.path.exists(target_cover):
-                            temp_downloaded_path = target_cover
-                    except Exception:
-                        target_cover = None
-
-                if target_cover:
-                    branded_path, was_branded = await apply_movie_hunt_branding(target_cover, client=self)
-                    if was_branded:
-                        cover = branded_path
-                        temp_branded_path = branded_path
-        except Exception as e:
-            log.exception(f"Cover branding error in custom_send_cached_media: {e}")
-
         try:
             if cover is not None:
                 if isinstance(cover, str):
@@ -127,15 +107,8 @@ async def custom_send_cached_media(
                         access_hash=vidcover_media.photo.access_hash,
                         file_reference=vidcover_media.photo.file_reference
                     )
-        except Exception as e:
-            log.exception(f"UploadMedia cover error: {e}")
-        finally:
-            for p in (temp_branded_path, temp_downloaded_path):
-                if p and os.path.exists(p):
-                    try:
-                        os.remove(p)
-                    except Exception:
-                        pass
+        except Exception:
+            pass
 
         media = utils.get_input_media_from_file_id(file_id)
         if vidcover_file is not None:
