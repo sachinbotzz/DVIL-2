@@ -16,9 +16,6 @@ from database.users_chats_db import db
 from bs4 import BeautifulSoup
 import requests
 from shortzy import Shortzy
-import tempfile
-import io
-from PIL import Image
 
 from urllib.parse import quote
 from plugins.Dreamxfutures.Imdbposter import get_movie_detailsx
@@ -1191,108 +1188,6 @@ def get_paid_confirmation_content():
         [InlineKeyboardButton("⬅ BACK", callback_data="buy_info")]
     ]
     return caption, InlineKeyboardMarkup(buttons)
-
-
-def is_movie_file(file_name="", caption="", imdb_data=None):
-    """
-    Returns True if the media item is a Movie, False if it is a TV series, web series, or episode.
-    """
-    if imdb_data and isinstance(imdb_data, dict):
-        kind = str(imdb_data.get('kind', '')).strip().lower()
-        seasons = imdb_data.get('seasons')
-        if kind and kind not in ['movie', 'tvmovie', 'film', 'none', '']:
-            return False
-        if seasons and seasons != "N/A":
-            return False
-
-    text = f"{file_name or ''} {caption or ''}".lower()
-    series_patterns = [
-        r'\bs\d{1,2}\s*e\d{1,2}\b',   # S01E02, S1E2
-        r'\bs\d{1,2}\b',             # S01, S1 (standalone season tag)
-        r'\be\d{1,2}\b',             # E01, E2, EP01
-        r'\bseason\s*\d{1,2}\b',     # Season 1
-        r'\bep(isode)?\s*\d{1,2}\b', # Episode 1, Ep01
-        r'\bcomplete\s+series\b',
-        r'\bzip\s+pack\b'
-    ]
-    for pat in series_patterns:
-        if re.search(pat, text):
-            return False
-    return True
-
-
-async def apply_movie_hunt_branding(photo_input, client=None, imdb_data=None):
-    """
-    Applies assets/movie_hunt_zone.png logo overlay to movie thumbnails only.
-    - photo_input can be: a URL string, a local file path, or a Pyrogram file_id string.
-    - Only applies to Movies (kind == 'movie' or 'tvMovie' and no seasons).
-    - Does NOT apply to web-series / TV series / episodes.
-    - Uses ~50% thumbnail width logo scaled proportionally.
-    - Creates a temporary copy, leaving original thumbnail untouched.
-    - Returns (photo_path_or_input, is_temporary_flag).
-    """
-    if imdb_data and isinstance(imdb_data, dict):
-        if not is_movie_file(imdb_data=imdb_data):
-            return photo_input, False
-
-    logo_path = os.path.join(os.getcwd(), 'assets', 'movie_hunt_zone.png')
-    if not photo_input or not os.path.exists(logo_path):
-        return photo_input, False
-
-    downloaded_temp_path = None
-    try:
-        base_img = None
-        if isinstance(photo_input, str):
-            if photo_input.startswith("http://") or photo_input.startswith("https://"):
-                resp = await asyncio.to_thread(requests.get, photo_input, timeout=10)
-                if resp.status_code == 200:
-                    base_img = Image.open(io.BytesIO(resp.content)).convert("RGBA")
-            elif os.path.exists(photo_input):
-                base_img = Image.open(photo_input).convert("RGBA")
-            elif client:
-                try:
-                    downloaded_temp_path = await client.download_media(photo_input)
-                    if downloaded_temp_path and os.path.exists(downloaded_temp_path):
-                        base_img = Image.open(downloaded_temp_path).convert("RGBA")
-                except Exception as ex:
-                    logger.warning(f"Could not download photo_input file_id via client: {ex}")
-
-        if base_img is None:
-            return photo_input, False
-
-        logo_img = Image.open(logo_path).convert("RGBA")
-
-        # Scale logo to ~50% of thumbnail width while preserving aspect ratio
-        target_logo_width = int(base_img.width * 0.50)
-        if target_logo_width < 1:
-            target_logo_width = base_img.width
-        aspect_ratio = logo_img.height / logo_img.width
-        target_logo_height = int(target_logo_width * aspect_ratio)
-
-        logo_resized = logo_img.resize((target_logo_width, target_logo_height), Image.Resampling.LANCZOS)
-
-        # Position near bottom center area
-        pos_x = (base_img.width - target_logo_width) // 2
-        padding_bottom = max(8, int(base_img.height * 0.025))
-        pos_y = base_img.height - target_logo_height - padding_bottom
-
-        base_img.paste(logo_resized, (pos_x, max(0, pos_y)), logo_resized)
-
-        temp_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
-        final_img = base_img.convert("RGB")
-        final_img.save(temp_file.name, format="JPEG", quality=95)
-        temp_file.close()
-
-        return temp_file.name, True
-    except Exception as e:
-        logger.exception(f"Branding overlay failed, falling back to original photo: {e}")
-        return photo_input, False
-    finally:
-        if downloaded_temp_path and os.path.exists(downloaded_temp_path):
-            try:
-                os.remove(downloaded_temp_path)
-            except Exception:
-                pass
 
 
 

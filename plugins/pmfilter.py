@@ -1,4 +1,4 @@
-from utils import get_random_mix_id, get_size, is_subscribed, is_req_subscribed, group_setting_buttons, get_poster, get_posterx, temp, get_settings, save_group_settings, get_cap, imdb, is_check_admin, extract_request_content, log_error, clean_filename, generate_season_variations, clean_search_text, is_premium_movie, get_premium_plans_content, get_plan_details_content, get_paid_confirmation_content, apply_movie_hunt_branding
+from utils import get_random_mix_id, get_size, is_subscribed, is_req_subscribed, group_setting_buttons, get_poster, get_posterx, temp, get_settings, save_group_settings, get_cap, imdb, is_check_admin, extract_request_content, log_error, clean_filename, generate_season_variations, clean_search_text, is_premium_movie, get_premium_plans_content, get_plan_details_content, get_paid_confirmation_content
 import tracemalloc
 from fuzzywuzzy import process
 from dreamxbotz.util.file_properties import get_name, get_hash
@@ -18,7 +18,6 @@ import asyncio
 import re
 import math
 import random
-import os
 import pytz
 from datetime import datetime, timedelta
 lock = asyncio.Lock()
@@ -2008,29 +2007,13 @@ async def auto_filter(client, msg, spoll=False):
                         photo = imdb.get('backdrop') if imdb.get('backdrop') and LANDSCAPE_POSTER else imdb.get('poster')
                     else:
                         photo = imdb.get('poster')
-                    branded_photo, is_temp = await apply_movie_hunt_branding(photo, imdb_data=imdb)
-                    try:
-                        sent = await message.reply_photo(photo=branded_photo, caption=cap, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, has_spoiler=True)
-                    finally:
-                        if is_temp and os.path.exists(branded_photo):
-                            try:
-                                os.remove(branded_photo)
-                            except Exception:
-                                pass
+                    sent = await message.reply_photo(photo=photo, caption=cap, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, has_spoiler=True)
                     if m:
                         await m.delete()
                 except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
                     pic = imdb.get('poster')
                     poster = pic.replace('.jpg', "._V1_UX360.jpg")
-                    branded_photo, is_temp = await apply_movie_hunt_branding(poster, imdb_data=imdb)
-                    try:
-                        sent = await message.reply_photo(photo=branded_photo, caption=cap, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, has_spoiler=True)
-                    finally:
-                        if is_temp and os.path.exists(branded_photo):
-                            try:
-                                os.remove(branded_photo)
-                            except Exception:
-                                pass
+                    sent = await message.reply_photo(photo=poster, caption=cap, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML, has_spoiler=True)
                     if m:
                         await m.delete()
                 except Exception as e:
