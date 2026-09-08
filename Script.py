@@ -306,7 +306,7 @@ Nᴀᴍᴇ : {}
 
 Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
     
-    CAPTION = """<b><a href="https://t.me/+AE_IZdv2B-4zYjM1">{file_name}</a></b>\n\n<b>⚜️ Powered By : <a href="https://t.me/+3aDV-JI-jPo3Zjg1">[ movie channel ]</a></b>"""
+    CAPTION = """<b>{file_name}</b>\n\n<b>⚜️ Powered By : <a href="https://t.me/+-BtfQCWnQOllYzg1">[ movie channel ]</a></b>"""
     
     MOVIE_UPDATE_NOTIFY_TXT = """
 <blockquote><b>📥 NEW FILE ADDED ✅</b></blockquote>
