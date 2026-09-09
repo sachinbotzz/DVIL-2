@@ -151,7 +151,7 @@ Nᴀᴍᴇ - {}
 <blockquote expandable><b><i>ᴘʟᴇᴀꜱᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ꜰɪʟᴇ ᴛᴏ ꜱᴏᴍᴇᴡʜᴇʀᴇ ᴇʟꜱᴇ & ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ</i></b></blockquote>"""
     DAILY_LIMIT_TXT = """<b>🚫 Daily Download Limit Reached!</b>
 
-📦 Free users can download only <b>5 files</b> every 24 hours.
+📦 Free users can download only <b>1 files</b> every 24 hours.
 
 💎 Upgrade to Premium and enjoy:
 • ♾ Unlimited Downloads
@@ -328,7 +328,7 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 
 <b>🎞️ RATING : {rating}</b>
 <b>⏱️ DURATION : {runtime}</b>
-<blockquote><b>⚡ Powered by - <a href="https://t.me/MovieHuntZone">Movie Hunt Zone</a></b></blockquote>
+<blockquote><b>⚡ Powered by - <a href="https://t.me/MovieHuntZon">Movie Hunt Zone</a></b></blockquote>
 
 <b>🕒 {date}</b>
 """
