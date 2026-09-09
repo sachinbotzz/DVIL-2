@@ -306,7 +306,7 @@ Nᴀᴍᴇ : {}
 
 Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
     
-    CAPTION = """<b><a href="https://t.me/+k1ZDXVZXlKEwZTg1">{file_name}</a></b>\n\n<b>
+    CAPTION = """<b>{file_name}</b>"""
     
     MOVIE_UPDATE_NOTIFY_TXT = """
 <blockquote><b>📥 NEW FILE ADDED ✅</b></blockquote>
@@ -322,7 +322,8 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 
 <b>🎞️ RATING : {rating}</b>
 <b>⏱️ DURATION : {runtime}</b>
-<blockquote><b>⚡ Powered by - <a href="https://t.me/MovieHuntZon">Movie Hunt Zone</a></b></blockquote>
+
+<blockquote><b>⚡ Powered by - <a href="https://t.me/MovieHuntZone">Movie Hunt Zone</a></b></blockquote>
 
 <b>🕒 {date}</b>
 """
