@@ -306,7 +306,7 @@ Nᴀᴍᴇ : {}
 
 Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
     
-    CAPTION = """<b><a href="https://t.me/+-BtfQCWnQOllYzg1">{file_name}</a></b>\n\n<b>⚜️ Powered By : <a href="https://Sachinmoho">[ movie channel ]</a></b>"""
+    CAPTION = """<b><a href="https://t.me/+k1ZDXVZXlKEwZTg1">{file_name}</a></b>\n\n<b>⚜️ Powered By : <a href="https://Sachinmoho">[ movie channel ]</a></b>"""
     
     MOVIE_UPDATE_NOTIFY_TXT = """
 <blockquote><b>📥 NEW FILE ADDED ✅</b></blockquote>
