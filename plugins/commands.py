@@ -392,7 +392,7 @@ async def start(client, message):
             ]
             return await message.reply_text(
                 "🚫 <b>Daily download limit reached.</b>\n\n"
-                "📦 <b>Free users can download only 5 files every 24 hours.</b>\n\n"
+                "📦 <b>Free users can download only 1 files every 24 hours.</b>\n\n"
                 "💎 <b>Upgrade to Premium for unlimited downloads.</b>",
                 quote=True,
                 reply_markup=InlineKeyboardMarkup(btn),
@@ -417,7 +417,7 @@ async def start(client, message):
                         ]
                         await message.reply_text(
                             "🚫 <b>Daily download limit reached.</b>\n\n"
-                            "📦 <b>Free users can download only 5 files every 24 hours.</b>\n\n"
+                            "📦 <b>Free users can download only 1 files every 24 hours.</b>\n\n"
                             "💎 <b>Upgrade to Premium for unlimited downloads.</b>",
                             quote=True,
                             reply_markup=InlineKeyboardMarkup(limit_btn),
