@@ -69,7 +69,7 @@ PLAN_30_DAYS_PRICE = environ.get('PLAN_30_DAYS_PRICE', '100')
 PLAN_90_DAYS_PRICE = environ.get('PLAN_90_DAYS_PRICE', '250')
 
 PAYMENT_URL = environ.get('PAYMENT_URL', 'https://files.catbox.moe/hr5rlm.jpg')
-SUPPORT_USERNAME = environ.get('SUPPORT_USERNAME', 'https://files.catbox.moe/hr5rlm.jpg')
+SUPPORT_USERNAME = environ.get('SUPPORT_USERNAME', 'https://t.me/Sachinmoho')
 UPI_ID = environ.get('UPI_ID', OWNER_UPI_ID)
 UPI_NAME = environ.get('UPI_NAME', 'Movie Hunt Zone')
 PREMIUM_TRIAL_COUNT = int(environ.get('PREMIUM_TRIAL_COUNT', '3'))
