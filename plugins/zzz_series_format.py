@@ -30,7 +30,7 @@ script.MOVIE_UPDATE_NOTIFY_TXT = """
 
 {episodes}
 
-<blockquote><b>⚡ Powered by - <a href=\"https://t.me/+CknuU6iZD781MjM1\">Movie Hunt Zone</a></b></blockquote>
+<blockquote><b>⚡ Powered by - <a href=\"https://t.me/+k1ZDXVZXlKEwZTg1\">सचिन रिक्वेस्ट मूवी ग्रुप</a></b></blockquote>
 
 <b>🕒 {date}</b>
 """
