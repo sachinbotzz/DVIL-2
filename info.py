@@ -37,7 +37,7 @@ PICS = (environ.get('PICS', 'https://files.catbox.moe/fydkks.jpg https://files.c
 NOR_IMG = environ.get("NOR_IMG", "https://graph.org/file/e20b5fdaf217252964202.jpg")
 MELCOW_PHOTO = environ.get("MELCOW_PHOTO", "https://graph.org/file/56b5deb73f3b132e2bb73.jpg")
 SPELL_IMG = environ.get("SPELL_IMG", "https://graph.org/file/13702ae26fb05df52667c.jpg")
-SUBSCRIPTION = (environ.get('SUBSCRIPTION', 'https://graph.org/file/242b7f1b52743938d81f1.jpg'))
+SUBSCRIPTION = (environ.get('SUBSCRIPTION', 'https://files.catbox.moe/hr5rlm.jpg'))
 FSUB_PICS = (environ.get('FSUB_PICS', 'https://graph.org/file/7478ff3eac37f4329c3d8.jpg https://graph.org/file/56b5deb73f3b132e2bb73.jpg')).split()  # Fsub pic
 # ============================
 # Admin, Channels & Users Configuration
@@ -61,7 +61,7 @@ auth_channels     = environ.get("AUTH_CHANNELS", "100")# Channels for force sub 
 # ============================
 # Payment Configuration
 # ============================
-QR_CODE = environ.get('QR_CODE', '')    # QR code image for payments
+QR_CODE = environ.get('QR_CODE', 'https://files.catbox.moe/hr5rlm.jpg')    # QR code image for payments
 OWNER_UPI_ID = environ.get('OWNER_UPI_ID', '')    # Owner UPI ID for payments
 
 # Premium Plans Prices & Links
@@ -71,8 +71,8 @@ PLAN_30_DAYS_PRICE = environ.get('PLAN_30_DAYS_PRICE', '60')
 PLAN_45_DAYS_PRICE = environ.get('PLAN_45_DAYS_PRICE', '90')
 PLAN_60_DAYS_PRICE = environ.get('PLAN_60_DAYS_PRICE', '120')
 
-PAYMENT_URL = environ.get('PAYMENT_URL', 'https://t.me/Phantom_Devil')
-SUPPORT_USERNAME = environ.get('SUPPORT_USERNAME', 'https://t.me/Phantom_Devil')
+PAYMENT_URL = environ.get('PAYMENT_URL', 'https://files.catbox.moe/hr5rlm.jpg')
+SUPPORT_USERNAME = environ.get('SUPPORT_USERNAME', 'https://files.catbox.moe/hr5rlm.jpg')
 UPI_ID = environ.get('UPI_ID', OWNER_UPI_ID)
 UPI_NAME = environ.get('UPI_NAME', 'Movie Hunt Zone')
 PREMIUM_TRIAL_COUNT = int(environ.get('PREMIUM_TRIAL_COUNT', '3'))
