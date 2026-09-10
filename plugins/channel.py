@@ -429,7 +429,7 @@ async def send_movie_update(bot, base_name):
                         caption=text,
                         reply_markup=buttons,
                         parse_mode=enums.ParseMode.HTML,
-                        has_spoiler=True
+                        has_spoiler=False
                     )
                     is_photo = True
                 else:
