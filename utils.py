@@ -1102,35 +1102,32 @@ def get_premium_plans_content():
     caption = (
         "🏆 <b>AVAILABLE PLANS</b> 🏆\n\n"
         "💎 <b>PREMIUM MEMBERSHIP</b> 💎\n\n"
-        f"⭕ 07 Days ➜ ₹{PLAN_7_DAYS_PRICE}\n"
-        f"⭕ 15 Days ➜ ₹{PLAN_15_DAYS_PRICE}\n"
-        f"⭕ 30 Days ➜ ₹{PLAN_30_DAYS_PRICE}\n"
-        f"⭕ 45 Days ➜ ₹{PLAN_45_DAYS_PRICE}\n"
-        f"⭕ 60 Days ➜ ₹{PLAN_60_DAYS_PRICE}\n\n"
+        f"⭕ 1 Month ➜ ₹{PLAN_30_DAYS_PRICE}\n"
+        f"⭕ 3 Months ➜ ₹{PLAN_90_DAYS_PRICE}\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n\n"
         "📌 <b>Subscription Process</b>\n\n"
         "✅ Send payment screenshot after payment.\n\n"
         "✅ Wait for admin approval.\n\n"
         "━━━━━━━━━━━━━━━━━━━━"
     )
+
     buttons = [
         [
-            InlineKeyboardButton(f"07 Days ₹{PLAN_7_DAYS_PRICE}", callback_data="plan_7"),
-            InlineKeyboardButton(f"15 Days ₹{PLAN_15_DAYS_PRICE}", callback_data="plan_15")
-        ],
-        [
-            InlineKeyboardButton(f"30 Days ₹{PLAN_30_DAYS_PRICE}", callback_data="plan_30"),
-            InlineKeyboardButton(f"45 Days ₹{PLAN_45_DAYS_PRICE}", callback_data="plan_45")
-        ],
-        [
-            InlineKeyboardButton(f"60 Days ₹{PLAN_60_DAYS_PRICE}", callback_data="plan_60")
+            InlineKeyboardButton(
+                f"1 Month ₹{PLAN_30_DAYS_PRICE}",
+                callback_data="plan_30"
+            ),
+            InlineKeyboardButton(
+                f"3 Months ₹{PLAN_90_DAYS_PRICE}",
+                callback_data="plan_90"
+            )
         ],
         [
             InlineKeyboardButton("⬅ Back", callback_data="premium_info")
         ]
     ]
-    return caption, InlineKeyboardMarkup(buttons)
 
+    return caption, InlineKeyboardMarkup(buttons)
 
 def generate_upi_link(days: Union[int, str], amount: Union[int, str]) -> str:
     days_str = str(days).zfill(2)
@@ -1141,12 +1138,8 @@ def generate_upi_link(days: Union[int, str], amount: Union[int, str]) -> str:
 
 def get_plan_details_content(plan_key: str):
     plans_map = {
-        "plan_7": ("07", PLAN_7_DAYS_PRICE),
-        "plan_07": ("07", PLAN_7_DAYS_PRICE),
-        "plan_15": ("15", PLAN_15_DAYS_PRICE),
-        "plan_30": ("30", PLAN_30_DAYS_PRICE),
-        "plan_45": ("45", PLAN_45_DAYS_PRICE),
-        "plan_60": ("60", PLAN_60_DAYS_PRICE),
+    "plan_30": ("30", PLAN_30_DAYS_PRICE),
+    "plan_90": ("90", PLAN_90_DAYS_PRICE),
     }
     if plan_key not in plans_map:
         return None, None
