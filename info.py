@@ -65,11 +65,8 @@ QR_CODE = environ.get('QR_CODE', 'https://files.catbox.moe/hr5rlm.jpg')    # QR 
 OWNER_UPI_ID = environ.get('OWNER_UPI_ID', '')    # Owner UPI ID for payments
 
 # Premium Plans Prices & Links
-PLAN_7_DAYS_PRICE = environ.get('PLAN_7_DAYS_PRICE', '20')
-PLAN_15_DAYS_PRICE = environ.get('PLAN_15_DAYS_PRICE', '40')
-PLAN_30_DAYS_PRICE = environ.get('PLAN_30_DAYS_PRICE', '60')
-PLAN_45_DAYS_PRICE = environ.get('PLAN_45_DAYS_PRICE', '90')
-PLAN_60_DAYS_PRICE = environ.get('PLAN_60_DAYS_PRICE', '120')
+PLAN_30_DAYS_PRICE = environ.get('PLAN_30_DAYS_PRICE', '100')
+PLAN_90_DAYS_PRICE = environ.get('PLAN_90_DAYS_PRICE', '250')
 
 PAYMENT_URL = environ.get('PAYMENT_URL', 'https://files.catbox.moe/hr5rlm.jpg')
 SUPPORT_USERNAME = environ.get('SUPPORT_USERNAME', 'https://files.catbox.moe/hr5rlm.jpg')
