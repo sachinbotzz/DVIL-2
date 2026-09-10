@@ -323,7 +323,7 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 <b>🎞️ RATING : {rating}</b>
 <b>⏱️ DURATION : {runtime}</b>
 
-<blockquote><b>⚡ Powered by - <a href="https://t.me/+CknuU6iZD781MjM1">MOVIE</a></b></blockquote>
+<blockquote><b>⚡ Powered by - <a href="https://t.me/+k1ZDXVZXlKEwZTg1">MOVIE</a></b></blockquote>
 
 <b>🕒 {date}</b>
 """
