@@ -61,8 +61,8 @@ auth_channels     = environ.get("AUTH_CHANNELS", "100")# Channels for force sub 
 # ============================
 # Payment Configuration
 # ============================
-QR_CODE = environ.get('QR_CODE', 'https://files.catbox.moe/hr5rlm.jpg')    # QR code image for payments
-OWNER_UPI_ID = environ.get('OWNER_UPI_ID', '')    # Owner UPI ID for payments
+QR_CODE = environ.get('QR_CODE', '')    # QR code image for payments
+OWNER_UPI_ID = environ.get('OWNER_UPI_ID', '9975076035@ptaxis')    # Owner UPI ID for payments
 
 # Premium Plans Prices & Links
 PLAN_30_DAYS_PRICE = environ.get('PLAN_30_DAYS_PRICE', '100')
@@ -70,8 +70,8 @@ PLAN_90_DAYS_PRICE = environ.get('PLAN_90_DAYS_PRICE', '250')
 
 PAYMENT_URL = environ.get('PAYMENT_URL', 'https://files.catbox.moe/hr5rlm.jpg')
 SUPPORT_USERNAME = environ.get('SUPPORT_USERNAME', 'https://t.me/Sachinmoho')
-UPI_ID = environ.get('UPI_ID', OWNER_UPI_ID)
-UPI_NAME = environ.get('UPI_NAME', 'Movie Hunt Zone')
+UPI_ID = environ.get('UPI_ID', 9975076035@ptaxis)
+UPI_NAME = environ.get('UPI_NAME', 'SACHIN MOHOL')
 PREMIUM_TRIAL_COUNT = int(environ.get('PREMIUM_TRIAL_COUNT', '3'))
 
 STAR_PREMIUM_PLANS = {
