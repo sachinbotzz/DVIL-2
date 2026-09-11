@@ -362,8 +362,8 @@ sʜᴏᴡɴ ɪɴ : {remaining_seconds} <i>sᴇᴄ</i>⚡️
     PREMIUM_TEXT = """<blockquote>🎖 <b>ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʟᴀɴs</b></blockquote>
 
 
-  ◉ 30 ᴅᴀʏꜱ  ➠  ₹100
-  ◉ 90 ᴅᴀʏꜱ  ➠  ₹250
+  ◉ 1 MONTH  ➠  ₹100
+  ◉ 3 MONTH'S ➠ ₹250
 •─────•─────────•─────•
 
 
@@ -426,8 +426,8 @@ sʜᴏᴡɴ ɪɴ : {remaining_seconds} <i>sᴇᴄ</i>⚡️
 
 <blockquote>🎖 <b>ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʟᴀɴꜱ</b></blockquote>
 
- ◉ 30 ᴅᴀʏꜱ  ➠  ₹100
- ◉ 90 ᴅᴀʏꜱ  ➠  ₹250
+   ◉ 1 MONTH  ➠  ₹100
+   ◉ 3 MONTH'S ➠ ₹250
 
 •─────•─────────•─────•
 
