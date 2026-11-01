@@ -151,7 +151,7 @@ Nᴀᴍᴇ - {}
 <blockquote expandable><b><i>ᴘʟᴇᴀꜱᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ꜰɪʟᴇ ᴛᴏ ꜱᴏᴍᴇᴡʜᴇʀᴇ ᴇʟꜱᴇ & ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ</i></b></blockquote>"""
     DAILY_LIMIT_TXT = """<b>🚫 Daily Download Limit Reached!</b>
 
-📦 Free users can download only <b>1 files</b> every 24 hours.
+📦 Free users can download only <b>0 files</b> every 24 hours.
 
 💎 Upgrade to Premium and enjoy:
 • ♾ Unlimited Downloads
