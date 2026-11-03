@@ -483,7 +483,7 @@ async def start(client, message):
                     cover=cover,
                     file_id=file_id,
                     protect_content=settings.get('file_secure', PROTECT_CONTENT),
-                    reply_markup=InlineKeyboardMarkup(btn))
+                    reply_markup=safe_stream_markup(btn))
                 await db.increase_daily_download(message.from_user.id)
 
                 filetype = msg.media
@@ -500,7 +500,7 @@ async def start(client, message):
                         return
                 await msg.edit_caption(
                     f_caption,
-                    reply_markup=InlineKeyboardMarkup(btn)
+                    reply_markup=safe_stream_markup(btn)
                 )
                 k = await msg.reply(script.DEL_MSG.format(get_time(DELETE_TIME)),
                     quote=True, parse_mode=enums.ParseMode.HTML
@@ -538,7 +538,7 @@ async def start(client, message):
             cover=cover,
             caption=f_caption,
             protect_content=settings.get('file_secure', PROTECT_CONTENT),
-            reply_markup=InlineKeyboardMarkup(btn)
+            reply_markup=safe_stream_markup(btn)
         )
         await db.increase_daily_download(message.from_user.id)
         
@@ -562,6 +562,28 @@ async def start(client, message):
             except Exception as e:
                 logger.exception(f"Error In Deleting Sticker - {e}")
                 pass
+
+def safe_stream_markup(button_rows):
+    """Return a Telegram-safe inline keyboard, or None if invalid/empty."""
+    if not button_rows:
+        return None
+    try:
+        for row in button_rows:
+            if not row:
+                return None
+            for button in row:
+                callback_data = getattr(button, "callback_data", None)
+                if callback_data is not None and len(callback_data.encode("utf-8")) > 64:
+                    # Telegram callback_data is limited to 1-64 bytes.
+                    return None
+                url = getattr(button, "url", None)
+                if url is not None and len(url.encode("utf-8")) > 2048:
+                    return None
+        return InlineKeyboardMarkup(button_rows)
+    except Exception:
+        logger.exception("Invalid stream keyboard; sending media without buttons")
+        return None
+
 
 async def stream_buttons(user_id: int, file_id: str):
     if STREAM_MODE and not PREMIUM_STREAM_MODE:
