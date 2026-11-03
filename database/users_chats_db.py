@@ -203,7 +203,11 @@ class Database:
         return (await self.db.command("dbstats"))['dataSize']
 
     async def get_user(self, user_id):
+        """Fetch a user record regardless of whether the stored ID is int or str."""
+        user_id = int(user_id)
         user_data = await self.users.find_one({"id": user_id})
+        if not user_data:
+            user_data = await self.users.find_one({"id": str(user_id)})
         return user_data
     async def update_user(self, user_data):
         await self.users.update_one({"id": user_data["id"]}, {"$set": user_data}, upsert=True)
@@ -314,16 +318,38 @@ class Database:
         return await self.verify_id.update_one(myquery, newvalues)
 
     async def has_premium_access(self, user_id):
+        """Return True for configured premium users or users with a valid DB expiry."""
+        user_id = int(user_id)
+
+        # Explicit PREMIUM_USER entries are valid premium grants too.
+        if user_id in PREMIUM_USER or str(user_id) in PREMIUM_USER:
+            return True
+
         user_data = await self.get_user(user_id)
-        if user_data:
-            expiry_time = user_data.get("expiry_time")
-            if expiry_time is None:
+        if not user_data:
+            return False
+
+        expiry_time = user_data.get("expiry_time")
+        if not expiry_time:
+            return False
+
+        # Older records may contain ISO-formatted expiry strings.
+        if isinstance(expiry_time, str):
+            try:
+                expiry_time = datetime.datetime.fromisoformat(expiry_time.replace("Z", "+00:00"))
+            except (TypeError, ValueError):
                 return False
-            elif isinstance(expiry_time, datetime.datetime) and datetime.datetime.now() <= expiry_time:
-                return True
-            else:
-                await self.users.update_one({"id": user_id}, {"$set": {"expiry_time": None}})
-        return False
+
+        if not isinstance(expiry_time, datetime.datetime):
+            return False
+
+        # Compare consistently in UTC, handling both naive and timezone-aware values.
+        if expiry_time.tzinfo is None:
+            expiry_time = expiry_time.replace(tzinfo=datetime.timezone.utc)
+        else:
+            expiry_time = expiry_time.astimezone(datetime.timezone.utc)
+
+        return datetime.datetime.now(datetime.timezone.utc) <= expiry_time
 
     async def check_daily_limit(self, user_id):
         user_id = int(user_id)
@@ -343,12 +369,12 @@ class Database:
                     last_date = last_date.replace(tzinfo=None)
                 if (now - last_date).total_seconds() >= 86400:
                     await self.users.update_one({"id": user_id}, {"$set": {"daily_downloads": 0, "last_download_date": now}})
-                    return True
+                    return DAILY_DOWNLOAD_LIMIT > 0
             else:
                 try:
                     if str(last_date)[:10] != now.strftime("%Y-%m-%d"):
                         await self.users.update_one({"id": user_id}, {"$set": {"daily_downloads": 0, "last_download_date": now}})
-                        return True
+                        return DAILY_DOWNLOAD_LIMIT > 0
                 except Exception:
                     pass
 
