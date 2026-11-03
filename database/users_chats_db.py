@@ -333,7 +333,7 @@ class Database:
         if not user:
             user = await self.users.find_one({"id": str(user_id)})
         if not user:
-            return True
+            return DAILY_DOWNLOAD_LIMIT > 0
 
         now = datetime.datetime.utcnow()
         last_date = user.get("last_download_date")
