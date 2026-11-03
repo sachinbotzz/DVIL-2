@@ -76,7 +76,7 @@ async def start(client, message):
             btn = [[
                 InlineKeyboardButton("✅ ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇ ✅", url=verifiedfiles),
             ]]
-            reply_markup=InlineKeyboardMarkup(btn)
+            reply_markup=InlineKeyboardMarkup(btn) if btn else None
             dlt=await m.reply_photo(
                 photo=(VERIFY_IMG),
                 caption=msg.format(message.from_user.mention, get_readable_time(TWO_VERIFY_GAP)),
@@ -446,7 +446,7 @@ async def start(client, message):
                         file_id=file_id,
                         caption=f_caption,
                         protect_content=settings.get('file_secure', PROTECT_CONTENT),
-                        reply_markup=InlineKeyboardMarkup(btn)
+                        reply_markup=InlineKeyboardMarkup(btn) if btn else None
                     )
                     await db.increase_daily_download(message.from_user.id)
                     filesarr.append(msg)
@@ -483,7 +483,7 @@ async def start(client, message):
                     cover=cover,
                     file_id=file_id,
                     protect_content=settings.get('file_secure', PROTECT_CONTENT),
-                    reply_markup=safe_stream_markup(btn))
+                    reply_markup=InlineKeyboardMarkup(btn) if btn else None)
                 await db.increase_daily_download(message.from_user.id)
 
                 filetype = msg.media
@@ -500,7 +500,7 @@ async def start(client, message):
                         return
                 await msg.edit_caption(
                     f_caption,
-                    reply_markup=safe_stream_markup(btn)
+                    reply_markup=InlineKeyboardMarkup(btn) if btn else None
                 )
                 k = await msg.reply(script.DEL_MSG.format(get_time(DELETE_TIME)),
                     quote=True, parse_mode=enums.ParseMode.HTML
@@ -538,7 +538,7 @@ async def start(client, message):
             cover=cover,
             caption=f_caption,
             protect_content=settings.get('file_secure', PROTECT_CONTENT),
-            reply_markup=safe_stream_markup(btn)
+            reply_markup=InlineKeyboardMarkup(btn) if btn else None
         )
         await db.increase_daily_download(message.from_user.id)
         
@@ -563,44 +563,29 @@ async def start(client, message):
                 logger.exception(f"Error In Deleting Sticker - {e}")
                 pass
 
-def safe_stream_markup(button_rows):
-    """Return a Telegram-safe inline keyboard, or None if invalid/empty."""
-    if not button_rows:
-        return None
-    try:
-        for row in button_rows:
-            if not row:
-                return None
-            for button in row:
-                callback_data = getattr(button, "callback_data", None)
-                if callback_data is not None and len(callback_data.encode("utf-8")) > 64:
-                    # Telegram callback_data is limited to 1-64 bytes.
-                    return None
-                url = getattr(button, "url", None)
-                if url is not None and len(url.encode("utf-8")) > 2048:
-                    return None
-        return InlineKeyboardMarkup(button_rows)
-    except Exception:
-        logger.exception("Invalid stream keyboard; sending media without buttons")
-        return None
-
-
 async def stream_buttons(user_id: int, file_id: str):
+    # Telegram limits callback_data to 64 bytes. Long Pyrogram file IDs
+    # cannot be embedded directly; omit the stream button but still deliver media.
+    stream_callback = f'generate_stream_link:{file_id}'
+    if len(stream_callback.encode('utf-8')) > 64:
+        return []
+
     if STREAM_MODE and not PREMIUM_STREAM_MODE:
-        return [
-            [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'generate_stream_link:{file_id}')],
-        ]
+        return [[InlineKeyboardButton(
+            '🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️',
+            callback_data=stream_callback
+        )]]
     elif STREAM_MODE and PREMIUM_STREAM_MODE:
         if not await db.has_premium_access(user_id):
-            return [
-                [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data='prestream')],
-                ]
-        else:
-            return [
-                [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'generate_stream_link:{file_id}')],
-                    ]
-    else:
-        return []
+            return [[InlineKeyboardButton(
+                '🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️',
+                callback_data='prestream'
+            )]]
+        return [[InlineKeyboardButton(
+            '🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️',
+            callback_data=stream_callback
+        )]]
+    return []
     
 @Client.on_message(filters.command('logs') & filters.user(ADMINS))
 async def log_file(bot, message):
@@ -841,7 +826,7 @@ async def requests(bot, message):
                         InlineKeyboardButton('ᴠɪᴇᴡ ʀᴇǫᴜᴇꜱᴛ', url=f"{message.reply_to_message.link}"),
                         InlineKeyboardButton('ꜱʜᴏᴡ ᴏᴘᴛɪᴏɴꜱ', callback_data=f'show_option#{reporter}')
                       ]]
-                reported_post = await bot.send_message(chat_id=REQST_CHANNEL, text=f"<b>📝 ʀᴇǫᴜᴇꜱᴛ : <u>{content}</u>\n\n📚 ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ : {mention}\n📖 ʀᴇᴘᴏʀᴛᴇʀ ɪᴅ : {reporter}\n\n</b>", reply_markup=InlineKeyboardMarkup(btn))
+                reported_post = await bot.send_message(chat_id=REQST_CHANNEL, text=f"<b>📝 ʀᴇǫᴜᴇꜱᴛ : <u>{content}</u>\n\n📚 ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ : {mention}\n📖 ʀᴇᴘᴏʀᴛᴇʀ ɪᴅ : {reporter}\n\n</b>", reply_markup=InlineKeyboardMarkup(btn) if btn else None)
                 success = True
             elif len(content) >= 3:
                 for admin in ADMINS:
@@ -849,7 +834,7 @@ async def requests(bot, message):
                         InlineKeyboardButton('ᴠɪᴇᴡ ʀᴇǫᴜᴇꜱᴛ', url=f"{message.reply_to_message.link}"),
                         InlineKeyboardButton('ꜱʜᴏᴡ ᴏᴘᴛɪᴏɴꜱ', callback_data=f'show_option#{reporter}')
                       ]]
-                    reported_post = await bot.send_message(chat_id=admin, text=f"<b>📝 ʀᴇǫᴜᴇꜱᴛ : <u>{content}</u>\n\n📚 ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ : {mention}\n📖 ʀᴇᴘᴏʀᴛᴇʀ ɪᴅ : {reporter}\n\n</b>", reply_markup=InlineKeyboardMarkup(btn))
+                    reported_post = await bot.send_message(chat_id=admin, text=f"<b>📝 ʀᴇǫᴜᴇꜱᴛ : <u>{content}</u>\n\n📚 ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ : {mention}\n📖 ʀᴇᴘᴏʀᴛᴇʀ ɪᴅ : {reporter}\n\n</b>", reply_markup=InlineKeyboardMarkup(btn) if btn else None)
                     success = True
             else:
                 if len(content) < 3:
@@ -875,7 +860,7 @@ async def requests(bot, message):
                         InlineKeyboardButton('ᴠɪᴇᴡ ʀᴇǫᴜᴇꜱᴛ', url=f"{message.link}"),
                         InlineKeyboardButton('ꜱʜᴏᴡ ᴏᴘᴛɪᴏɴꜱ', callback_data=f'show_option#{reporter}')
                       ]]
-                reported_post = await bot.send_message(chat_id=REQST_CHANNEL, text=f"<b>📝 ʀᴇǫᴜᴇꜱᴛ : <u>{content}</u>\n\n📚 ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ : {mention}\n📖 ʀᴇᴘᴏʀᴛᴇʀ ɪᴅ : {reporter}\n\n</b>", reply_markup=InlineKeyboardMarkup(btn))
+                reported_post = await bot.send_message(chat_id=REQST_CHANNEL, text=f"<b>📝 ʀᴇǫᴜᴇꜱᴛ : <u>{content}</u>\n\n📚 ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ : {mention}\n📖 ʀᴇᴘᴏʀᴛᴇʀ ɪᴅ : {reporter}\n\n</b>", reply_markup=InlineKeyboardMarkup(btn) if btn else None)
                 success = True
             elif len(content) >= 3:
                 for admin in ADMINS:
@@ -883,7 +868,7 @@ async def requests(bot, message):
                         InlineKeyboardButton('ᴠɪᴇᴡ ʀᴇǫᴜᴇꜱᴛ', url=f"{message.link}"),
                         InlineKeyboardButton('ꜱʜᴏᴡ ᴏᴘᴛɪᴏɴꜱ', callback_data=f'show_option#{reporter}')
                       ]]
-                    reported_post = await bot.send_message(chat_id=admin, text=f"<b>📝 ʀᴇǫᴜᴇꜱᴛ : <u>{content}</u>\n\n📚 ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ : {mention}\n📖 ʀᴇᴘᴏʀᴛᴇʀ ɪᴅ : {reporter}\n\n</b>", reply_markup=InlineKeyboardMarkup(btn))
+                    reported_post = await bot.send_message(chat_id=admin, text=f"<b>📝 ʀᴇǫᴜᴇꜱᴛ : <u>{content}</u>\n\n📚 ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ : {mention}\n📖 ʀᴇᴘᴏʀᴛᴇʀ ɪᴅ : {reporter}\n\n</b>", reply_markup=InlineKeyboardMarkup(btn) if btn else None)
                     success = True
             else:
                 if len(content) < 3:
@@ -908,7 +893,7 @@ async def requests(bot, message):
                 InlineKeyboardButton('ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ', url=link.invite_link),
                 InlineKeyboardButton('ᴠɪᴇᴡ ʀᴇǫᴜᴇꜱᴛ', url=f"{reported_post.link}")
               ]]
-        await message.reply_text("<b>ʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛ ʜᴀꜱ ʙᴇᴇɴ ᴀᴅᴅᴇᴅ! ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ ꜰᴏʀ ꜱᴏᴍᴇ ᴛɪᴍᴇ.\n\nᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ ꜰɪʀꜱᴛ & ᴠɪᴇᴡ ʀᴇǫᴜᴇꜱᴛ.</b>", reply_markup=InlineKeyboardMarkup(btn))
+        await message.reply_text("<b>ʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛ ʜᴀꜱ ʙᴇᴇɴ ᴀᴅᴅᴇᴅ! ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ ꜰᴏʀ ꜱᴏᴍᴇ ᴛɪᴍᴇ.\n\nᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ ꜰɪʀꜱᴛ & ᴠɪᴇᴡ ʀᴇǫᴜᴇꜱᴛ.</b>", reply_markup=InlineKeyboardMarkup(btn) if btn else None)
 
 @Client.on_message(filters.command("send") & filters.user(ADMINS))
 async def send_msg(bot, message):
