@@ -72,7 +72,7 @@ PAYMENT_URL = environ.get('PAYMENT_URL', 'https://files.catbox.moe/hr5rlm.jpg')
 SUPPORT_USERNAME = environ.get('SUPPORT_USERNAME', 'https://t.me/Sachinmoho')
 UPI_ID = environ.get('UPI_ID', '9975076035@ptaxis')
 UPI_NAME = environ.get('UPI_NAME', 'SACHIN MOHOL')
-PREMIUM_TRIAL_COUNT = int(environ.get('PREMIUM_TRIAL_COUNT', '3'))
+PREMIUM_TRIAL_COUNT = int(environ.get('PREMIUM_TRIAL_COUNT', '0'))  # No free premium-movie trials for normal users
 
 STAR_PREMIUM_PLANS = {
     10: "7day",
